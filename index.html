@@ -973,7 +973,7 @@ $('#mvb').onclick = stopMedia;
 
 function botWelcome() { if(me === BOT) return; load(); const id = 'p:' + [me, BOT].sort().join(':'); if(db.chats[id]) return; db.chats[id] = { id, type: 'p', members: [me, BOT], msgs: [{ f: BOT, t: Date.now(), r: [], text: 'Halo! Kirimkan link media sosial untuk mendownload.' }], created: Date.now() }; save(); }
 
-const PRIV_ITEMS = [['pic','🖼️ Foto Profil'], ['online','🟢 Online & Terakhir Dilihat'], ['bio','📝 Bio'], ['readReceipts','✔✔ Centang Biru (Tanda Dibaca)']];
+const PRIV_ITEMS = [['pic','🖼️ Foto Profil'], ['online','🟢 Online & Terakhir Dilihat'], ['bio','📝 Bio'], ['readReceipts','✔✔ verifikasi Biru (Tanda Dibaca)']];
 const PRIV_MODES = [['all','Tampilkan untuk semua'], ['except','Semua terkecuali…'], ['only','Hanya (pilih)…'], ['nobody','Tidak ada']];
 const privOf = (u, k) => { const p = (((db.users[u] || {}).priv) || {})[k] || {}; return { mode: p.mode || 'all', list: p.list || [] }; };
 const privSum = p => p.mode === 'all' ? 'Semua orang' : p.mode === 'nobody' ? 'Tidak ada' : (p.mode === 'except' ? 'Semua kecuali ' : 'Hanya ') + p.list.length + ' orang';
@@ -1066,7 +1066,7 @@ function ownerPanel() {
   const hasBadge = u => { const b = (db.users[u] || {}).badge; return b === undefined ? u === OWN : !!b; };
   const users = () => { load(); return Object.keys(db.users).filter(u => !BOTS.includes(u)).sort(); };
   const after = () => { renderSide(); if(cur && db.chats[cur]) renderChat(); };
-  const chipsOf = u => { const x = db.users[u] || {}; return (x.ban ? '<span class="ow-chip r">🚫 Banned</span>' : '') + (frz(u) ? `<span class="ow-chip y">🧊 Beku · ${fmtLeft(x.frz - Date.now())}</span>` : '') + (hasBadge(u) ? '<span class="ow-chip b">✔ Centang</span>' : '') + (u === OWN ? '<span class="ow-chip g">👑 Owner</span>' : ''); };
+  const chipsOf = u => { const x = db.users[u] || {}; return (x.ban ? '<span class="ow-chip r">🚫 Banned</span>' : '') + (frz(u) ? `<span class="ow-chip y">🧊 Beku · ${fmtLeft(x.frz - Date.now())}</span>` : '') + (hasBadge(u) ? '<span class="ow-chip b">✔ verifikasi</span>' : '') + (u === OWN ? '<span class="ow-chip g">👑 Owner</span>' : ''); };
   const shell = h => { d.innerHTML = `<div class="ow-box">${h}</div>`; };
 
   /* ---- daftar akun ---- */
@@ -1080,7 +1080,7 @@ function ownerPanel() {
     tu = null; sub = null; const us = users();
     const n = { t: us.length, b: us.filter(u => db.users[u].ban).length, f: us.filter(frz).length, c: us.filter(hasBadge).length };
     shell(`<div class="ow-hero"><button class="ow-x" id="ow-close">✕</button><div class="ow-shield">🛡️</div><h2>Panel Owner</h2><p>Kelola semua akun pengguna</p>
-      <div class="ow-stats"><div><b>${n.t}</b><span>Akun</span></div><div><b>${n.b}</b><span>Banned</span></div><div><b>${n.f}</b><span>Beku</span></div><div><b>${n.c}</b><span>Centang</span></div></div></div>
+      <div class="ow-stats"><div><b>${n.t}</b><span>Akun</span></div><div><b>${n.b}</b><span>Banned</span></div><div><b>${n.f}</b><span>Beku</span></div><div><b>${n.c}</b><span>verifikasi</span></div></div></div>
       <div class="ow-body"><input class="f-auth ow-search" id="ow-q" placeholder="🔍 Cari username..." value="${esc(q)}"><div id="ow-ul"></div></div>`);
     d.querySelector('#ow-close').onclick = () => d.remove();
     d.querySelector('#ow-q').oninput = e => { q = e.target.value.trim().toLowerCase().replace('@', ''); drawUsers(); };
@@ -1109,11 +1109,11 @@ function ownerPanel() {
     const passP = `<div class="ow-panel"><small>Masukkan password baru untuk @${esc(u)} (min. 6 karakter). Password langsung terganti.</small>
       <input class="f-auth" id="ow-np" type="text" placeholder="Password baru" autocomplete="off" style="margin-top:8px;border-radius:12px">
       <button class="btn-auth" id="ow-pgo" style="background:linear-gradient(135deg,#f59e0b,#ef4444)">🔑 Ganti Password</button></div>`;
-    const badgeP = `<div class="ow-panel"><div class="ow-pv" id="ow-pv"></div><small>Pilih warna centang</small>
+    const badgeP = `<div class="ow-panel"><div class="ow-pv" id="ow-pv"></div><small>Pilih warna verifikasi</small>
       <div class="ow-sws">${PAL.map(([n, c]) => `<button class="ow-sw" data-c="${c}" title="${n}" style="background:${c}"></button>`).join('')}</div>
       <div style="display:flex;align-items:center;gap:10px;margin:8px 0 12px"><small style="flex:1">🎨 Atau pilih warna bebas</small><input type="color" id="ow-cc" value="${color}" style="width:56px;height:36px;border:0;background:none;padding:0;cursor:pointer"></div>
-      <button class="btn-auth" id="ow-bgo" style="background:linear-gradient(135deg,#6366f1,#ec4899)">✔ Berikan Centang</button>
-      ${hasBadge(u) ? '<button class="btn-auth" id="ow-brm" style="background:var(--line);color:var(--txt);margin-top:8px;box-shadow:none">Hapus Centang</button>' : ''}</div>`;
+      <button class="btn-auth" id="ow-bgo" style="background:linear-gradient(135deg,#6366f1,#ec4899)">✔ Berikan verifikasi</button>
+      ${hasBadge(u) ? '<button class="btn-auth" id="ow-brm" style="background:var(--line);color:var(--txt);margin-top:8px;box-shadow:none">Hapus verifikasi</button>' : ''}</div>`;
 
     shell(`<div class="ow-hero"><button class="ow-back" id="ow-back">‹</button><button class="ow-x" id="ow-close">✕</button>
       <div class="ow-prof">${av(u, 'big')}<h2 style="margin:4px 0 0">@${esc(u)}${vb(u)}</h2><p>${esc(x.email || '')}</p></div></div>
@@ -1121,7 +1121,7 @@ function ownerPanel() {
       ${self ? '' : act('freeze', '🧊', 'Bekukan Akun', f ? 'Sedang beku · sisa ' + fmtLeft(x.frz - Date.now()) : 'Tidak bisa chat selama waktu tertentu', 'linear-gradient(135deg,#0ea5e9,#6366f1)', freezeP)}
       ${self ? '' : act('ban', x.ban ? '✅' : '🚫', x.ban ? 'Unban Akun' : 'Banned Akun', x.ban ? 'Akun sedang dibanned · ketuk untuk membuka' : 'Akun tidak bisa login & langsung keluar', x.ban ? 'linear-gradient(135deg,#22c55e,#14b8a6)' : 'linear-gradient(135deg,#ef4444,#b91c1c)')}
       ${act('pass', '🔑', 'Reset Password', 'Ganti password akun langsung', 'linear-gradient(135deg,#f59e0b,#ef4444)', passP)}
-      ${act('badge', '✔', 'Berikan Centang', hasBadge(u) ? 'Sudah punya centang · ubah warna' : 'Pilih warna centang sesukamu', 'linear-gradient(135deg,#6366f1,#ec4899)', badgeP)}
+      ${act('badge', '✔', 'Berikan verifikasi', hasBadge(u) ? 'Sudah punya verifikasi · ubah warna' : 'Pilih warna verifikasi sesukamu', 'linear-gradient(135deg,#6366f1,#ec4899)', badgeP)}
       ${self ? '' : act('delete', '🗑️', 'Hapus Akun', 'Hapus permanen akun beserta obrolannya', 'linear-gradient(135deg,#475569,#0f172a)')}</div>`);
 
     d.querySelector('#ow-close').onclick = () => d.remove();
@@ -1164,14 +1164,14 @@ function ownerPanel() {
       db.users[u].pass = hp; save(); toast('Password @' + u + ' berhasil diganti'); sub = null; detail();
     };
 
-    // centang
+    // verifikasi
     if(sub === 'badge') {
       paintBadge();
       d.querySelectorAll('.ow-sw').forEach(b => b.onclick = () => { color = b.dataset.c; paintBadge(); });
       d.querySelector('#ow-cc').oninput = e => { color = e.target.value; paintBadge(); };
-      d.querySelector('#ow-bgo').onclick = () => { load(); db.users[u].badge = color; save(); toast('Centang diberikan ke @' + u); after(); sub = null; detail(); };
+      d.querySelector('#ow-bgo').onclick = () => { load(); db.users[u].badge = color; save(); toast('verifikasi diberikan ke @' + u); after(); sub = null; detail(); };
       const brm = d.querySelector('#ow-brm');
-      if(brm) brm.onclick = () => { load(); db.users[u].badge = ''; save(); toast('Centang @' + u + ' dihapus'); after(); sub = null; detail(); };
+      if(brm) brm.onclick = () => { load(); db.users[u].badge = ''; save(); toast('verifikasi @' + u + ' dihapus'); after(); sub = null; detail(); };
     }
   };
 
