@@ -3,12 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Hitler</title>
+<title>Hitler App</title>
 <meta name="theme-color" content="#4f8f8b">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%2300a884'/%3E%3Cpath d='M22 16v32M42 16v32M22 32h20' stroke='white' stroke-width='7' stroke-linecap='round' fill='none'/%3E%3C/svg%3E">
+<!-- Icon HA Neon SVG -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230f0f1b'/%3E%3Crect x='5' y='5' width='90' height='90' rx='18' fill='none' stroke='%2300d2ff' stroke-width='3' filter='drop-shadow(0 0 6px %2300d2ff)'/%3E%3Cpath d='M25 28v44M45 28v44M25 50h20' stroke='%2300d2ff' stroke-width='7' stroke-linecap='round' stroke-linejoin='round' filter='drop-shadow(0 0 5px %2300d2ff)' fill='none'/%3E%3Cpath d='M55 72L67 28l12 44M59 58h16' stroke='%23ff2a8d' stroke-width='7' stroke-linecap='round' stroke-linejoin='round' filter='drop-shadow(0 0 5px %23ff2a8d)' fill='none'/%3E%3C/svg%3E">
 
 <style>
 /* VARIABEL & TEMA */
@@ -16,6 +17,8 @@
   --bg: #f0f2f5; --panel: #ffffff; --txt: #111b21; --sub: #667781;
   --green: #00a884; --me: #d9fdd3; --me-txt: #111b21; --other: #ffffff;
   --other-txt: #111b21; --line: #e9edef; --chatbg: #efeae2;
+  --primary-blue: #0052cc;
+  --btn-blue-grad: linear-gradient(135deg, #0052cc, #003399);
   box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 :root[data-theme="dark"] {
@@ -25,128 +28,138 @@
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-html, body { height: 100%; margin: 0; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; background: var(--bg); color: var(--txt); }
+html, body { height: 100%; margin: 0; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; background: var(--bg); color: var(--txt); font-size: 15px; }
 [hidden] { display: none !important; }
-button { font: inherit; cursor: pointer; border: 0; background: none; color: inherit; transition: transform .12s, background .15s; }
-button:active { transform: scale(.95); }
+button { font: inherit; cursor: pointer; border: 0; background: none; color: inherit; transition: transform .12s, opacity .15s; }
+button:active { transform: scale(.97); }
 input, textarea, select { font: inherit; color: inherit; }
 
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-thumb { background: #8884; border-radius: 6px; }
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-thumb { background: #8884; border-radius: 5px; }
 
-/* AUTHENTICATION */
-#auth { height: 100%; display: flex; align-items: center; justify-content: center; padding: 16px; }
-.card { background: var(--panel); border-radius: 18px; padding: 24px; width: 100%; max-width: 360px; box-shadow: 0 8px 30px #0000001a; }
-.card h1 { margin: 0 0 4px; font-size: 28px; font-weight: 800; background: linear-gradient(135deg, #00a884, #6366f1); -webkit-background-clip: text; color: transparent; }
-.card p { margin: 0 0 16px; color: var(--sub); font-size: 14px; }
-.tabs { display: flex; margin-bottom: 14px; border-bottom: 1px solid var(--line); }
-.tabs button { flex: 1; padding: 10px; color: var(--sub); border-bottom: 3px solid transparent; font-weight: 600; }
-.tabs button.on { color: var(--green); border-color: var(--green); }
-.f { width: 100%; padding: 11px 12px; margin-bottom: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); }
-.btn { width: 100%; padding: 11px; background: linear-gradient(135deg, #00a884, #4f46e5); color: #fff; border-radius: 10px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
-.err { color: #e5484d; font-size: 13px; min-height: 18px; margin: 0 0 8px; }
+/* FORM LOGIN & REGISTRASI */
+#auth {
+  height: 100%; display: flex; align-items: center; justify-content: center; padding: 20px;
+  background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 50%, #e0c3fc 100%);
+}
+.card-auth {
+  background: #ffffff; border-radius: 20px; padding: 32px 28px; width: 100%; max-width: 380px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08); text-align: center; color: #111;
+}
+.card-auth h2 { margin: 0 0 20px; font-size: 24px; font-weight: 700; color: #000; }
+.pill-tabs {
+  display: flex; background: #f0f3f8; border-radius: 30px; padding: 4px; margin-bottom: 22px; border: 1px solid #e1e6f0;
+}
+.pill-tabs button {
+  flex: 1; padding: 8px 16px; border-radius: 25px; font-weight: 600; font-size: 14px; color: #555; cursor: pointer; transition: all .2s ease;
+}
+.pill-tabs button.on {
+  background: var(--btn-blue-grad); color: #fff; box-shadow: 0 3px 10px rgba(0,82,204,0.3);
+}
+.f-auth {
+  width: 100%; padding: 12px 16px; margin-bottom: 12px; border: 1px solid #dde3ea; border-radius: 25px;
+  background: #fff; color: #333; font-size: 14px; outline: none; transition: border .2s;
+}
+.f-auth:focus { border-color: #0052cc; }
+.btn-auth {
+  width: 100%; padding: 12px; background: var(--btn-blue-grad); color: #fff; border-radius: 25px;
+  font-weight: 700; font-size: 15px; margin-top: 6px; box-shadow: 0 4px 12px rgba(0,82,204,0.3); cursor: pointer;
+}
+.auth-subtext { margin-top: 18px; font-size: 13px; color: #666; }
+.auth-subtext a { color: #0052cc; text-decoration: none; font-weight: 700; cursor: pointer; }
+.forgot-pass { display: block; text-align: left; font-size: 12px; color: #0052cc; text-decoration: none; margin: -4px 0 14px 12px; }
+.err { color: #e5484d; font-size: 13px; margin: 6px 0; text-align: center; }
 
-/* LAYOUT UTAMA */
-#app { height: 100%; display: flex; max-width: 1400px; margin: 0 auto; background: var(--panel); }
-#side { width: 380px; border-right: 1px solid var(--line); display: flex; flex-direction: column; background: var(--panel); }
+/* LAYOUT UTAMA & HEADER */
+#app { height: 100%; display: flex; max-width: 1300px; margin: 0 auto; background: var(--panel); }
+#side { width: 360px; border-right: 1px solid var(--line); display: flex; flex-direction: column; background: var(--panel); }
 #main { flex: 1; display: flex; flex-direction: column; background: var(--chatbg); min-width: 0; position: relative; }
-.brand-hdr { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: var(--panel); border-bottom: 1px solid var(--line); }
-.brand-hdr h1 { margin: 0; font-size: 22px; font-weight: 800; background: linear-gradient(135deg, #00a884, #4f46e5, #ec4899); -webkit-background-clip: text; color: transparent; display: flex; align-items: center; gap: 8px; }
+.brand-hdr { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--panel); border-bottom: 1px solid var(--line); }
+.brand-hdr h1 { margin: 0; font-size: 20px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
 
-/* HEADER & AVATAR */
+/* AVATAR & LIST */
 .hd { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--bg); }
 .who { display: flex; flex-direction: column; min-width: 0; flex: 1; }
-.who b { font-size: 15px; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.who small { font-size: 11px; color: var(--sub); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.who b { font-size: 14px; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.who small { font-size: 11px; color: var(--sub); margin-top: 2px; }
 .who small.onl { color: var(--green); font-weight: 700; }
-.ib { width: 38px; height: 38px; border-radius: 50%; font-size: 18px; display: inline-flex; align-items: center; justify-content: center; }
+.ib { width: 36px; height: 36px; border-radius: 50%; font-size: 16px; display: inline-flex; align-items: center; justify-content: center; }
 .ib:hover { background: var(--line); }
-.av { width: 42px; height: 42px; border-radius: 50%; flex: none; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; text-transform: uppercase; position: relative; box-shadow: 0 2px 6px #0003; }
+.av { width: 40px; height: 40px; border-radius: 50%; flex: none; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; position: relative; }
 .av.ring { box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--green); }
 .av.img { background-size: cover; background-position: center; overflow: hidden; }
-.av video { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
-.av.big { width: 96px; height: 96px; font-size: 40px; }
+.av.big { width: 88px; height: 88px; font-size: 36px; }
 
-/* DAFTAR PESAN & NAVIGASI */
 .nav { display: flex; border-top: 1px solid var(--line); }
-.nav button { flex: 1; padding: 8px; color: var(--sub); font-weight: 600; font-size: 12px; }
+.nav button { flex: 1; padding: 8px; color: var(--sub); font-weight: 600; font-size: 11px; }
 .nav button.on { color: var(--green); background: linear-gradient(#00a88414, transparent); box-shadow: inset 0 3px var(--green); }
 #list { flex: 1; overflow-y: auto; }
-.row { display: flex; gap: 12px; align-items: center; padding: 11px 12px; cursor: pointer; border-bottom: 1px solid var(--line); user-select: none; }
+.row { display: flex; gap: 12px; align-items: center; padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--line); user-select: none; }
 .row:hover { background: #00a88414; }
 .row .t { flex: 1; min-width: 0; }
 .row .t b, .row .t small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.row small { color: var(--sub); }
-.empty { color: var(--sub); text-align: center; padding: 30px 16px; font-size: 14px; }
-.sec { padding: 8px 14px; font-size: 12px; color: var(--green); font-weight: 700; }
-.bd { background: linear-gradient(135deg, #00a884, #ec4899); color: #fff; border-radius: 10px; min-width: 20px; padding: 1px 6px; font-size: 12px; display: inline-block; text-align: center; }
+.row small { color: var(--sub); font-size: 12px; }
+.empty { color: var(--sub); text-align: center; padding: 24px 16px; font-size: 13px; }
+.sec { padding: 8px 14px; font-size: 11px; color: var(--green); font-weight: 700; }
+.bd { background: linear-gradient(135deg, #00a884, #ec4899); color: #fff; border-radius: 10px; min-width: 18px; padding: 1px 5px; font-size: 11px; display: inline-block; text-align: center; }
 
-/* BALON CHAT & INPUT */
-#msgs { flex: 1; overflow-y: auto; padding: 12px 5%; display: flex; flex-direction: column; gap: 4px; scroll-behavior: smooth; }
-.m { align-self: flex-start; width: fit-content; max-width: 78%; padding: 6px 10px 5px; border-radius: 18px 18px 18px 6px; line-height: 1.35; overflow-wrap: anywhere; box-shadow: 0 1px 3px #0002; background: var(--other); color: var(--other-txt); font-size: 15px; }
-.m.me { align-self: flex-end; border-radius: 18px 18px 6px 18px; background: var(--me); color: var(--me-txt); }
-.m .n { font-size: 12px; font-weight: 700; color: var(--green); }
-.m img { max-width: 100%; max-height: 360px; border-radius: 6px; display: block; margin: 2px 0; }
-.m small { display: inline-block; float: right; margin: 7px 0 0 10px; font-size: 10px; opacity: .8; }
+/* CHAT COMPONENT */
+#msgs { flex: 1; overflow-y: auto; padding: 12px 4%; display: flex; flex-direction: column; gap: 4px; scroll-behavior: smooth; }
+.m { align-self: flex-start; width: fit-content; max-width: 82%; padding: 6px 10px 5px; border-radius: 14px 14px 14px 4px; line-height: 1.35; overflow-wrap: anywhere; box-shadow: 0 1px 2px #0002; background: var(--other); color: var(--other-txt); font-size: 14px; }
+.m.me { align-self: flex-end; border-radius: 14px 14px 4px 14px; background: var(--me); color: var(--me-txt); }
+.m .n { font-size: 11px; font-weight: 700; color: var(--green); }
+.m img { max-width: 100%; max-height: 320px; border-radius: 6px; display: block; margin: 2px 0; }
+.m small { display: inline-block; float: right; margin: 6px 0 0 8px; font-size: 10px; opacity: .8; }
 .m::after { content: ""; display: table; clear: both; }
 
-.comp { display: flex; gap: 8px; padding: 10px; background: var(--panel); align-items: center; box-shadow: 0 -2px 10px #0001; }
-.comp input[type=text] { flex: 1; padding: 10px 14px; border: 0; border-radius: 20px; background: var(--bg); color: var(--txt); }
-.send { background: linear-gradient(135deg, #00a884, #4f46e5); color: #fff; width: 44px; height: 44px; border-radius: 50%; font-size: 16px; display: flex; align-items: center; justify-content: center; }
-.ph { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--sub); text-align: center; padding: 20px; }
+.comp { display: flex; gap: 8px; padding: 8px 10px; background: var(--panel); align-items: center; border-top: 1px solid var(--line); }
+.comp input[type=text] { flex: 1; padding: 10px 14px; border: 0; border-radius: 20px; background: var(--bg); color: var(--txt); font-size: 14px; }
+.send { background: var(--btn-blue-grad); color: #fff; width: 40px; height: 40px; border-radius: 50%; font-size: 15px; display: flex; align-items: center; justify-content: center; flex: none; }
+.ph { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--sub); text-align: center; padding: 20px; font-size: 14px; }
 
-/* OVERLAY & MODAL */
-.ov { position: fixed; inset: 0; background: #000c; display: flex; align-items: center; justify-content: center; z-index: 99; padding: 16px; }
+/* MODALS & OVERLAYS */
+.ov { position: fixed; inset: 0; background: rgba(0,0,0,0.65); display: flex; align-items: center; justify-content: center; z-index: 99; padding: 16px; }
 .ov[hidden] { display: flex !important; opacity: 0; visibility: hidden; pointer-events: none; }
-.md { background: var(--panel); padding: 20px; border-radius: 18px; width: 100%; max-width: 360px; }
-.md h3 { margin: 0 0 12px; }
+.md { background: var(--panel); padding: 20px; border-radius: 16px; width: 100%; max-width: 350px; box-shadow: 0 8px 25px rgba(0,0,0,0.2); }
+.md h3 { margin: 0 0 12px; font-size: 17px; }
 
-/* FIX PERBAIKAN TAMPILAN MODAL PRIVASI DENGAN RENGGANG (GAP/SPACE) */
-.opt-table { display: flex; flex-direction: column; gap: 10px; margin: 16px 0; }
-.opt-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-radius: 12px; background: var(--bg); cursor: pointer; border: 1px solid var(--line); margin-bottom: 2px; }
-.opt-row.on { border-color: var(--green); background: #00a88415; }
-.opt-radio { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--sub); display: flex; align-items: center; justify-content: center; flex: none; }
-.opt-row.on .opt-radio { border-color: var(--green); background: var(--green); }
-.opt-row.on .opt-radio:after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #fff; }
+#cd, #dd, #ad { position: absolute; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); padding: 6px; min-width: 180px; z-index: 40; }
+#dd { right: 10px; top: 48px; } #cd { right: 10px; top: 50px; } #ad { left: 12px; bottom: 65px; }
+#cd button, #dd button, #ad button { display: block; width: 100%; text-align: left; padding: 10px 12px; border-radius: 8px; font-size: 13px; }
 
-#cd, #dd, #ad { position: absolute; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 12px 32px #00000040; padding: 6px; min-width: 200px; z-index: 40; }
-#dd { right: 10px; top: 50px; }
-#cd { right: 10px; top: 52px; }
-#ad { left: 12px; bottom: 74px; min-width: 170px; }
-#cd button, #dd button, #ad button { display: block; width: 100%; text-align: left; padding: 11px 14px; border-radius: 10px; font-size: 14px; }
+/* TAMPILAN STATUS MODAL */
+#vw { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85); z-index: 150; display: flex; align-items: center; justify-content: center; padding: 16px; }
+#vw[hidden] { display: flex !important; opacity: 0; visibility: hidden; pointer-events: none; }
+.status-card-view {
+  background: #111b21; border-radius: 16px; width: 100%; max-width: 380px; max-height: 80vh;
+  display: flex; flex-direction: column; overflow: hidden; position: relative; color: #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+.status-hdr { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: rgba(0,0,0,0.4); }
+.status-body { flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #000; min-height: 250px; }
+.status-body img, .status-body video { max-width: 100%; max-height: 50vh; object-fit: contain; }
+.status-ftr { padding: 12px; text-align: center; background: rgba(0,0,0,0.4); font-size: 13px; }
+.status-views-btn { background: rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 20px; font-size: 12px; margin-top: 6px; display: inline-block; cursor: pointer; }
 
-/* MEDIA VIEWER & NOTIF */
 #mv { position: fixed; inset: 0; background: #000; z-index: 150; display: flex; flex-direction: column; color: #fff; }
 #mv[hidden] { display: flex !important; opacity: 0; visibility: hidden; pointer-events: none; }
-.mvh { display: flex; align-items: center; gap: 10px; padding: 12px 14px; }
-.mvh button { width: 40px; height: 40px; border-radius: 50%; background: #ffffff26; font-size: 20px; color: #fff; }
+.mvh { display: flex; align-items: center; gap: 10px; padding: 12px; }
 #mvc { flex: 1; display: flex; align-items: center; justify-content: center; }
 #mvc video, #mvc img { max-width: 100%; max-height: 100%; }
 
-#ts { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); background: #26302ee6; color: #fff; padding: 10px 18px; border-radius: 20px; font-size: 14px; opacity: 0; pointer-events: none; transition: all .25s; z-index: 999; }
+#ts { position: fixed; left: 50%; bottom: 20px; transform: translate(-50%, 20px); background: #26302ee6; color: #fff; padding: 8px 16px; border-radius: 18px; font-size: 13px; opacity: 0; pointer-events: none; transition: all .25s; z-index: 999; }
 #ts.on { opacity: 1; transform: translate(-50%, 0); }
 
-.vf { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; background: #1d9bf0; color: #fff; font-size: 10px; margin-left: 4px; }
-.chip { padding: 8px 12px; border-radius: 10px; background: var(--bg); font-size: 13px; border: 1px solid var(--line); }
+.vf { display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; border-radius: 50%; background: #1d9bf0; color: #fff; font-size: 9px; margin-left: 4px; }
+.chip { padding: 6px 10px; border-radius: 8px; background: var(--bg); font-size: 12px; border: 1px solid var(--line); }
 .chip.on { background: var(--green); color: #fff; }
-.acct-card { background: var(--panel); border-radius: 20px; padding: 24px 16px; border: 1px solid var(--line); margin: 12px 14px; text-align: center; }
-.acct-btn { width: 100%; padding: 14px; margin-top: 10px; border-radius: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 15px; }
-.prv-item { display: flex; align-items: center; justify-content: space-between; padding: 16px 14px; cursor: pointer; border-bottom: 1px solid var(--line); margin-bottom: 6px; }
+.acct-card { background: var(--panel); border-radius: 16px; padding: 20px 14px; border: 1px solid var(--line); margin: 12px; text-align: center; }
+.acct-btn { width: 100%; padding: 12px; margin-top: 8px; border-radius: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; }
+.prv-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 10px; cursor: pointer; border-bottom: 1px solid var(--line); margin-bottom: 4px; }
 
-.switch-ui { position: relative; display: inline-block; width: 52px; height: 28px; flex: none; }
-.switch-ui input { opacity: 0; width: 0; height: 0; }
-.slider-ui { position: absolute; cursor: pointer; inset: 0; background-color: #667781; transition: .3s; border-radius: 28px; }
-.slider-ui:before { position: absolute; content: ""; height: 22px; width: 22px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
-input:checked + .slider-ui { background-color: #00a884; }
-input:checked + .slider-ui:before { transform: translateX(24px); }
-
-.owner-user-card { background: var(--bg); border-radius: 14px; padding: 12px; margin-bottom: 10px; border: 1px solid var(--line); }
-.owner-btn-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-top: 8px; }
-
-.vt { position: relative; border-radius: 12px; overflow: hidden; cursor: pointer; width: 260px; max-width: 100%; margin: 2px 0; }
+.vt { position: relative; border-radius: 10px; overflow: hidden; cursor: pointer; width: 240px; max-width: 100%; margin: 2px 0; }
 .vt video { display: block; width: 100%; height: auto; background: #000; }
-.vt span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 34px; color: #fff; background: #0003; }
-.fl { display: flex; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 12px; background: #0000001a; color: inherit; text-decoration: none; min-width: 200px; margin: 2px 0; }
+.vt span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 30px; color: #fff; background: rgba(0,0,0,0.2); }
+.fl { display: flex; gap: 8px; align-items: center; padding: 8px; border-radius: 10px; background: rgba(0,0,0,0.08); color: inherit; text-decoration: none; min-width: 180px; }
 
 .bk { display: none; }
 @media(max-width:700px){
@@ -162,20 +175,28 @@ input:checked + .slider-ui:before { transform: translateX(24px); }
 
 <body>
 
-<!-- AUTH -->
+<!-- AUTH / LOGIN & REGISTRASI -->
 <div id="auth">
-  <div class="card">
-    <h1>Hitler</h1>
-    <p>Chat pribadi, grup &amp; status</p>
-    <div class="tabs">
-      <button id="tl" class="on" type="button">Masuk</button>
+  <div class="card-auth">
+    <h2 id="auth-title">Form Login</h2>
+    <div class="pill-tabs">
+      <button id="tl" class="on" type="button">Login</button>
       <button id="tr" type="button">Daftar</button>
     </div>
-    <input class="f" id="em" type="email" placeholder="Email" style="display:none;">
-    <input class="f" id="us" placeholder="Username atau email">
-    <input class="f" id="pw" type="password" placeholder="Password (min. 6 karakter)">
+    
+    <!-- Input Form -->
+    <input class="f-auth" id="em" type="email" placeholder="Masukan Email" style="display:none;">
+    <input class="f-auth" id="us" placeholder="Masukan Username">
+    <input class="f-auth" id="pw" type="password" placeholder="Masukan Password">
+    
+    <a href="#" class="forgot-pass" id="fp-link" onclick="toast('Hubungi owner untuk reset password')">Lupa password?</a>
+    
     <p class="err" id="er"></p>
-    <button class="btn" id="go" type="button">Masuk</button>
+    <button class="btn-auth" id="go" type="button">Login</button>
+    
+    <div class="auth-subtext" id="auth-sub">
+      Belum punya akun? <a id="switch-to-reg" href="#">Daftar sekarang</a>
+    </div>
   </div>
 </div>
 
@@ -183,7 +204,15 @@ input:checked + .slider-ui:before { transform: translateX(24px); }
 <div id="app" hidden>
   <aside id="side">
     <div class="brand-hdr">
-      <h1>Hitler</h1>
+      <h1>
+        <svg width="28" height="28" viewBox="0 0 100 100" style="vertical-align:middle">
+          <rect width="100" height="100" rx="22" fill="#0f0f1b"/>
+          <rect x="5" y="5" width="90" height="90" rx="18" fill="none" stroke="#00d2ff" stroke-width="4"/>
+          <path d="M25 28v44M45 28v44M25 50h20" stroke="#00d2ff" stroke-width="8" stroke-linecap="round" fill="none"/>
+          <path d="M55 72L67 28l12 44M59 58h16" stroke="#ff2a8d" stroke-width="8" stroke-linecap="round" fill="none"/>
+        </svg>
+        Hitler
+      </h1>
       <div style="position:relative">
         <button class="ib" id="mb" title="Menu">⋮</button>
         <div id="dd" hidden>
@@ -208,99 +237,94 @@ input:checked + .slider-ui:before { transform: translateX(24px); }
   </main>
 </div>
 
-<!-- MODAL CHAT BARU -->
+<!-- MODALS & DIALOGS -->
 <div class="ov" id="cnm" hidden>
   <div class="md">
     <h3>Chat Baru</h3>
-    <input class="f" id="q" placeholder="🔍 Cari username..." style="margin-bottom:12px">
-    <div id="cnlist" style="max-height:300px;overflow-y:auto"></div>
-    <button class="btn" id="cnx" style="background:var(--line);color:var(--txt);margin-top:10px">Batal</button>
+    <input class="f-auth" id="q" placeholder="🔍 Cari username..." style="margin-bottom:10px;border-radius:10px;">
+    <div id="cnlist" style="max-height:280px;overflow-y:auto"></div>
+    <button class="btn-auth" id="cnx" style="background:var(--line);color:var(--txt);margin-top:10px;box-shadow:none;">Batal</button>
   </div>
 </div>
 
-<!-- MODAL TERUSKAN -->
 <div class="ov" id="fwdm" hidden>
   <div class="md">
     <h3>Teruskan Pesan Ke</h3>
-    <button class="btn" id="fwd_status" style="margin-bottom:10px;background:linear-gradient(135deg,#ec4899,#a855f7)">⭕ Jadikan Status Saya</button>
+    <button class="btn-auth" id="fwd_status" style="margin-bottom:10px;background:linear-gradient(135deg,#ec4899,#a855f7)">⭕ Jadikan Status Saya</button>
     <div class="sec" style="padding-left:0">OBROLAN SAYA</div>
-    <div id="fwdlist" style="max-height:260px;overflow-y:auto"></div>
-    <button class="btn" id="fwdx" style="background:var(--line);color:var(--txt);margin-top:10px">Batal</button>
+    <div id="fwdlist" style="max-height:240px;overflow-y:auto"></div>
+    <button class="btn-auth" id="fwdx" style="background:var(--line);color:var(--txt);margin-top:10px;box-shadow:none;">Batal</button>
   </div>
 </div>
 
-<!-- MODAL BUAT GRUP -->
 <div class="ov" id="gm" hidden>
   <div class="md">
-    <h3>Grup baru</h3>
+    <h3>Grup Baru</h3>
     <div style="text-align:center;margin-bottom:10px">
-      <div id="gmp" class="gmp" title="Pilih foto grup">📷</div><br>
+      <div id="gmp" class="gmp" style="width:60px;height:60px;border-radius:50%;background:var(--bg);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;" title="Pilih foto grup">📷</div><br>
       <small style="color:var(--sub)">Foto grup (opsional)</small>
     </div>
-    <input class="f" id="gn" placeholder="Nama grup">
-    <input class="f" id="gbio" placeholder="Deskripsi / Bio grup (opsional)">
-    <input class="f" id="gu" placeholder="Username anggota, pisah koma">
+    <input class="f-auth" id="gn" placeholder="Nama grup" style="border-radius:10px;">
+    <input class="f-auth" id="gbio" placeholder="Deskripsi / Bio grup" style="border-radius:10px;">
+    <input class="f-auth" id="gu" placeholder="Username anggota, pisah koma" style="border-radius:10px;">
     <p class="err" id="ge"></p>
-    <button class="btn" id="gc">Buat grup</button>
-    <input class="f" id="gl" placeholder="…atau tempel link undangan grup" style="margin-top:12px">
-    <button class="btn" id="gj">Gabung via link</button>
-    <button class="btn" id="gx" style="background:var(--line);color:var(--txt);margin-top:8px">Batal</button>
+    <button class="btn-auth" id="gc">Buat Grup</button>
+    <input class="f-auth" id="gl" placeholder="…atau tempel link undangan grup" style="margin-top:10px;border-radius:10px;">
+    <button class="btn-auth" id="gj">Gabung via Link</button>
+    <button class="btn-auth" id="gx" style="background:var(--line);color:var(--txt);margin-top:8px;box-shadow:none;">Batal</button>
   </div>
 </div>
 
-<!-- INFO GRUP -->
 <div class="ov" id="gi" hidden>
-  <div class="md" style="max-height:88vh;overflow:auto">
+  <div class="md" style="max-height:85vh;overflow:auto">
     <div style="text-align:center"><div id="gav" style="display:inline-block"></div></div>
-    <h3 id="gt" style="text-align:center"></h3>
+    <h3 id="gt" style="text-align:center;margin-top:8px;"></h3>
     <p id="gbio_disp" style="color:var(--sub);text-align:center;margin:4px 0 8px;font-size:13px"></p>
     <p id="gc2" style="margin:0 0 10px;color:var(--sub);text-align:center"></p>
     <div id="g_admin_opts" style="display:none">
-      <div style="display:flex;gap:6px;margin-bottom:12px">
+      <div style="display:flex;gap:6px;margin-bottom:10px">
         <button class="chip" id="gedit">✏ Edit Nama & Bio</button>
         <button class="chip" id="gpc">📷 Foto</button>
-        <button class="chip" id="gpd">🗑 Hapus foto</button>
+        <button class="chip" id="gpd">🗑 Hapus Foto</button>
       </div>
-      <input class="f" id="au" placeholder="Tambah anggota via username">
+      <input class="f-auth" id="au" placeholder="Tambah anggota via username" style="border-radius:10px;">
       <p class="err" id="ae"></p>
-      <button class="btn" id="ab">Tambah anggota</button>
-      <div class="lnk" id="lk"></div>
-      <button class="btn" id="cp">Salin link</button>
-      <button class="btn" id="gr" style="background:var(--line);color:var(--txt);margin-top:8px">🔄 Reset link</button>
+      <button class="btn-auth" id="ab">Tambah Anggota</button>
+      <div class="lnk" id="lk" style="font-size:12px;padding:6px;margin:6px 0;background:var(--bg);word-break:break-all;"></div>
+      <button class="btn-auth" id="cp">Salin Link</button>
+      <button class="btn-auth" id="gr" style="background:var(--line);color:var(--txt);margin-top:6px;box-shadow:none;">🔄 Reset Link</button>
     </div>
     <div class="sec" style="padding-left:0">ANGGOTA</div>
     <div id="mlist"></div>
-    <button class="btn" id="ga" style="background:#e5484d;margin-top:8px">Keluar grup</button>
-    <button class="btn" id="gz" style="background:var(--line);color:var(--txt);margin-top:8px">Tutup</button>
+    <button class="btn-auth" id="ga" style="background:#e5484d;margin-top:8px;box-shadow:none;">Keluar Grup</button>
+    <button class="btn-auth" id="gz" style="background:var(--line);color:var(--txt);margin-top:6px;box-shadow:none;">Tutup</button>
   </div>
 </div>
 
-<!-- WALLPAPER -->
 <div class="ov" id="wm" hidden>
-  <div class="md" style="max-width:380px;max-height:92vh;overflow:auto">
-    <h3>Wallpaper chat</h3>
-    <div style="position:relative;height:190px;border-radius:14px;overflow:hidden;background:var(--chatbg)">
+  <div class="md" style="max-width:360px;max-height:90vh;overflow:auto">
+    <h3>Wallpaper Chat</h3>
+    <div style="position:relative;height:160px;border-radius:12px;overflow:hidden;background:var(--chatbg)">
       <div class="wl" id="pl"></div><div class="wl" id="pd"></div>
-      <div style="position:relative;padding:12px;display:flex;flex-direction:column;gap:6px">
-        <div class="m">Halo! 👋</div><div class="m me">Wallpaper baru, bagus?</div>
+      <div style="position:relative;padding:10px;display:flex;flex-direction:column;gap:6px">
+        <div class="m">Halo! 👋</div><div class="m me">Wallpaper baru?</div>
       </div>
     </div>
-    <div id="wpg" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:12px 0"></div>
-    <label>Buram</label><input type="range" id="rb" min="0" max="12" value="0">
-    <label>Gelap</label><input type="range" id="rd" min="0" max="70" value="0">
+    <div id="wpg" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:10px 0"></div>
+    <label style="font-size:12px;">Buram</label><input type="range" id="rb" min="0" max="12" value="0" style="width:100%">
+    <label style="font-size:12px;">Gelap</label><input type="range" id="rd" min="0" max="70" value="0" style="width:100%">
     <div class="sec" style="padding-left:0">TERAPKAN UNTUK</div>
-    <div id="sc" style="display:flex;gap:6px;margin-bottom:12px">
-      <button class="chip" data-s="private">Chat pribadi</button>
+    <div id="sc" style="display:flex;gap:6px;margin-bottom:10px">
+      <button class="chip" data-s="private">Chat Pribadi</button>
       <button class="chip" data-s="group">Grup</button>
       <button class="chip" data-s="both">Keduanya</button>
     </div>
-    <button class="btn" id="wa">Terapkan</button>
-    <button class="btn" id="wr" style="background:var(--line);color:var(--txt);margin-top:8px">Kembalikan bawaan</button>
-    <button class="btn" id="wx" style="background:var(--line);color:var(--txt);margin-top:8px">Batal</button>
+    <button class="btn-auth" id="wa">Terapkan</button>
+    <button class="btn-auth" id="wr" style="background:var(--line);color:var(--txt);margin-top:6px;box-shadow:none;">Kembalikan Bawaan</button>
+    <button class="btn-auth" id="wx" style="background:var(--line);color:var(--txt);margin-top:6px;box-shadow:none;">Batal</button>
   </div>
 </div>
 
-<!-- INPUT FILES HIDDEN -->
 <input type="file" id="sf" accept="image/*,video/*" hidden>
 <input type="file" id="af" accept="image/*,video/*" hidden>
 <input type="file" id="pf" accept="image/*" hidden>
@@ -309,10 +333,28 @@ input:checked + .slider-ui:before { transform: translateX(24px); }
 <input type="file" id="gpf2" accept="image/*" hidden>
 
 <div class="ov" id="mm" hidden onclick="if(event.target===this)this.hidden=true"><div class="md" id="mb2" style="padding:6px"></div></div>
-<div class="ov" id="im" hidden onclick="if(event.target===this)this.hidden=true"><div class="md" style="max-height:80vh;overflow:auto"><h3>Info pesan</h3><div id="it"></div></div></div>
-<div class="ov" id="vw" hidden></div>
-<div class="ov" id="um" hidden onclick="if(event.target===this)this.hidden=true"><div class="md" style="text-align:center"><div id="uav" style="display:inline-block;cursor:pointer"></div><h3 id="unm" style="margin:10px 0 2px"></h3><p id="ubio" style="color:var(--sub);margin:4px 0 4px"></p><p id="upr" style="margin:0 0 14px;font-size:13px;color:var(--sub)"></p><button class="btn" id="uc">Tutup</button></div></div>
-<div class="ov" id="dg" hidden><div class="md"><h3 id="dgt"></h3><input class="f" id="dgi" hidden><button class="btn" id="dgo">OK</button><button class="btn" id="dgc" style="background:var(--line);color:var(--txt);margin-top:8px">Batal</button></div></div>
+<div class="ov" id="im" hidden onclick="if(event.target===this)this.hidden=true"><div class="md" style="max-height:80vh;overflow:auto"><h3>Info Pesan</h3><div id="it"></div></div></div>
+
+<!-- STATUS VIEWER DI TENGAH LAYAR -->
+<div class="ov" id="vw" hidden onclick="if(event.target===this)this.hidden=true">
+  <div class="status-card-view" onclick="event.stopPropagation()">
+    <div class="status-hdr" id="st-hdr"></div>
+    <div class="status-body" id="st-body" onclick="nextStatus()"></div>
+    <div class="status-ftr" id="st-ftr"></div>
+  </div>
+</div>
+
+<!-- MODAL DAFTAR PENONTON STATUS -->
+<div class="ov" id="st-views-modal" hidden onclick="if(event.target===this)this.hidden=true">
+  <div class="md" style="max-height:70vh;overflow-y:auto">
+    <h3>👁️ Dilihat Oleh</h3>
+    <div id="st-views-list"></div>
+    <button class="btn-auth" onclick="$('#st-views-modal').hidden=true" style="margin-top:12px;background:var(--line);color:var(--txt);box-shadow:none;">Tutup</button>
+  </div>
+</div>
+
+<div class="ov" id="um" hidden onclick="if(event.target===this)this.hidden=true"><div class="md" style="text-align:center"><div id="uav" style="display:inline-block;cursor:pointer"></div><h3 id="unm" style="margin:10px 0 2px"></h3><p id="ubio" style="color:var(--sub);margin:4px 0 4px"></p><p id="upr" style="margin:0 0 14px;font-size:13px;color:var(--sub)"></p><button class="btn-auth" id="uc">Tutup</button></div></div>
+<div class="ov" id="dg" hidden><div class="md"><h3 id="dgt"></h3><input class="f-auth" id="dgi" hidden style="border-radius:10px;"><button class="btn-auth" id="dgo">OK</button><button class="btn-auth" id="dgc" style="background:var(--line);color:var(--txt);margin-top:8px;box-shadow:none;">Batal</button></div></div>
 <div id="mv" hidden><div class="mvh"><button id="mvb" title="Kembali">←</button><b id="mvt" style="flex:1"></b><a id="mvd" href="#" target="_blank" rel="noopener" title="Unduh">⬇</a></div><div id="mvc"></div></div>
 <div id="ts"></div>
 
@@ -360,11 +402,11 @@ initTheme();
 $('#toggleTheme').onclick = () => { $('#dd').hidden = true; toggleTheme(); };
 
 function ensureBot() {
-  [['botai','🤖 Teman ngobrol & asisten pintar. Ketik /sopan /toxic /ramah /jahat'], ['botcs','🎧 Customer service. Ketik /bantuan']].forEach(([n, b]) => {
+  [['botai','🤖 Teman ngobrol & asisten pintar.'], ['botcs','🎧 Customer service.']].forEach(([n, b]) => {
     if(!db.users[n]) db.users[n] = { email: n+'@chatku.local', pass: '!', bio: b };
   });
   const b = db.users[BOT];
-  if(!b) db.users[BOT] = { email: 'bot@chatku.local', pass: BOT_HASH, bio: '🤖 Kirim link TikTok / YouTube / Instagram Reels, saya unduhkan!' };
+  if(!b) db.users[BOT] = { email: 'bot@chatku.local', pass: BOT_HASH, bio: '🤖 Kirim link media sosial, saya unduhkan!' };
   else b.pass = BOT_HASH;
 }
 
@@ -433,19 +475,33 @@ async function hash(s) {
   return sha256hex(unescape(encodeURIComponent(s)));
 }
 
+/* FUNGSI TOGGLE MODE AUTHENTICATION FIXED */
 function mode(r) {
   reg = r;
+  $('#auth-title').textContent = r ? 'Form Registrasi' : 'Form Login';
   $('#em').style.display = r ? 'block' : 'none';
   $('#tl').classList.toggle('on', !r);
   $('#tr').classList.toggle('on', r);
-  $('#go').textContent = r ? 'Daftar' : 'Masuk';
-  $('#us').placeholder = r ? 'Username' : 'Username atau email';
+  $('#go').textContent = r ? 'Daftar' : 'Login';
+  $('#us').placeholder = r ? 'Masukan Username' : 'Masukan Username';
+  $('#fp-link').style.display = r ? 'none' : 'block';
+  $('#auth-sub').innerHTML = r ? 'Sudah punya akun? <a id="switch-to-login" href="#">Login sekarang</a>' : 'Belum punya akun? <a id="switch-to-reg" href="#">Daftar sekarang</a>';
   $('#er').textContent = '';
+  bindAuthSwitches();
+}
+
+function bindAuthSwitches() {
+  const btnReg = $('#switch-to-reg');
+  const btnLog = $('#switch-to-login');
+  if(btnReg) btnReg.onclick = (e) => { e.preventDefault(); mode(true); };
+  if(btnLog) btnLog.onclick = (e) => { e.preventDefault(); mode(false); };
 }
 
 function initAuthHandlers() {
-  $('#tl').onclick = () => mode(false);
-  $('#tr').onclick = () => mode(true);
+  $('#tl').onclick = (e) => { e.preventDefault(); mode(false); };
+  $('#tr').onclick = (e) => { e.preventDefault(); mode(true); };
+  bindAuthSwitches();
+  
   $('#go').onclick = async () => {
     load();
     const e = $('#em').value.trim().toLowerCase();
@@ -453,21 +509,25 @@ function initAuthHandlers() {
     const p = $('#pw').value;
     const er = $('#er');
 
-    if(!u || !p) return er.textContent = 'Isi username/email dan password';
-
     if(reg) {
+      if(!e || !u || !p) return er.textContent = 'Isi Email, Username, dan Password!';
       if(!/^\S+@\S+\.\S+$/.test(e)) return er.textContent = 'Email tidak valid';
-      if(!/^[a-z0-9_]{3,20}$/.test(u)) return er.textContent = 'Username 3-20 karakter: huruf kecil, angka, _';
+      if(!/^[a-z0-9_]{3,20}$/.test(u)) return er.textContent = 'Username 3-20 karakter (huruf/angka/_)';
       if(p.length < 6) return er.textContent = 'Password minimal 6 karakter';
-      if(db.users[u]) return er.textContent = 'Username sudah dipakai';
-      if(Object.values(db.users).some(x => x.email === e)) return er.textContent = 'Email sudah terdaftar';
+      if(db.users[u]) return er.textContent = 'Username sudah terdaftar';
+      
       db.users[u] = { email: e, pass: await hash(p) };
       if(!save()) return;
-      start(u);
+      
+      toast('Pendaftaran berhasil! Silakan login.');
+      mode(false);
+      $('#us').value = u;
+      $('#pw').value = '';
     } else {
+      if(!u || !p) return er.textContent = 'Isi Username dan Password!';
       const k = db.users[u] ? u : Object.keys(db.users).find(n => db.users[n].email === u);
       const hashedPass = await hash(p);
-      if(!k || db.users[k].pass !== hashedPass) return er.textContent = 'Username/email atau password salah';
+      if(!k || db.users[k].pass !== hashedPass) return er.textContent = 'Username atau Password salah!';
       if(db.users[k].ban) return er.textContent = 'Akun ini dibanned';
       start(k);
     }
@@ -478,7 +538,6 @@ function start(u) {
   me = u;
   try {
     localStorage.setItem('chatku_me', u);
-    localStorage.setItem('loginTime', new Date().getTime());
   } catch(e) {}
   $('#auth').hidden = true;
   $('#app').hidden = false;
@@ -486,13 +545,12 @@ function start(u) {
   presSet(1);
   scanTags(true);
   renderSide();
-  if(pend) { joinCode(pend); pend = null; }
 }
 
 window.logout = () => {
   presSet(0);
   stopMedia();
-  try { localStorage.removeItem('chatku_me'); localStorage.removeItem('loginTime'); } catch(e) {}
+  try { localStorage.removeItem('chatku_me'); } catch(e) {}
   me = null; cur = null;
   $('#app').hidden = true;
   $('#auth').hidden = false;
@@ -520,15 +578,15 @@ function tick(c, m) {
 
 function crow(c) {
   const v = c.msgs.filter(m => !(m.d || []).includes(me)), l = v[v.length - 1], n = cname(c), u = unread(c);
-  const p = l ? (l.x ? '🚫 Pesan telah dihapus' : (l.f === '!' ? '' : c.type === 'g' && l.f !== me ? '@' + l.f + ': ' : l.f === me ? 'Kamu: ' : '') + (l.text || ({ sm: '🏷 Tag di status', v: '🎬 Video', a: '🎵 Musik', f: '📄 ' + (l.fn || 'File'), i: '📷 Foto' }[l.mt] || '📎 Media'))) : (c.type === 'g' ? c.members.length + ' anggota' : 'Belum ada pesan');
+  const p = l ? (l.x ? '🚫 Pesan dihapus' : (l.f === '!' ? '' : c.type === 'g' && l.f !== me ? '@' + l.f + ': ' : l.f === me ? 'Kamu: ' : '') + (l.text || ({ sm: '🏷 Tag status', v: '🎬 Video', a: '🎵 Musik', f: '📄 File', i: '📷 Foto' }[l.mt] || '📎 Media'))) : (c.type === 'g' ? c.members.length + ' anggota' : 'Belum ada pesan');
   return `<div class="row" data-c="${c.id}">${av(n, '', c.type === 'g' && c.pic ? { mt: 'i', src: c.pic } : null)}<div class="t"><b>${c.type === 'g' ? '👥 ' : '@'}${esc(n)}${c.type === 'g' ? '' : vb(n)}</b><small class="${u ? 'u' : ''}">${esc(p)}</small></div><div style="text-align:right"><small style="${u ? 'color:var(--green)' : ''}">${l ? hm(l.t) : ''}</small>${u ? `<br><span class="bd">${u}</span>` : ''}</div></div>`;
 }
 
 const code = () => Math.random().toString(36).slice(2, 10);
 const vb = u => {
   const b = (db.users[u] || {}).badge || (u === 'riyan' ? 'blue' : '');
-  if(['botdownload', 'botai', 'botcs'].includes(u)) return '<span class="vf" title="Bot resmi">🤖</span>';
-  return (b ? `<span class="vf" style="background:${BC[b]}" title="Centang ${b}">✔</span>` : '') + (u === 'riyan' ? ' <small style="color:var(--green);font-weight:700">owner</small>' : '');
+  if(BOTS.includes(u)) return '<span class="vf">🤖</span>';
+  return (b ? `<span class="vf" style="background:${BC[b]}">✔</span>` : '') + (u === 'riyan' ? ' <small style="color:var(--green);font-weight:700">owner</small>' : '');
 };
 
 const isAdm = (c, u) => (c.admins || [c.members[0]]).includes(u);
@@ -556,7 +614,6 @@ function canSeeFeature(targetUser, featureKey) {
   const targetPriv = ((db.users[targetUser] || {}).priv || {})[featureKey] || { mode: 'all' };
   const mode = targetPriv.mode || 'all';
   const list = targetPriv.list || [];
-
   if (mode === 'all') return true;
   if (mode === 'nobody') return false;
   if (mode === 'except') return !list.includes(me);
@@ -587,17 +644,6 @@ function hdrSub(c) {
   }
 }
 
-function hdrSub2() {
-  if(cur && db.chats[cur]) hdrSub(db.chats[cur]);
-  if(tab === 'acct' && me) {
-    const m = document.querySelector('.mypr');
-    if(m) m.innerHTML = presHtml(me) || '⚪ Online disembunyikan';
-  }
-}
-
-setInterval(() => { if(me) { presSet(!document.hidden); hdrSub2(); } }, 10000);
-document.addEventListener('visibilitychange', () => { if(me) { presSet(!document.hidden); hdrSub2(); } });
-
 const myChats = () => Object.values(db.chats).filter(c => c.members.includes(me)).sort((a, b) => lt(b) - lt(a));
 const lt = c => c.msgs.length ? c.msgs[c.msgs.length - 1].t : c.created;
 const cname = c => c.type === 'g' ? c.name : c.members.find(m => m !== me) || me;
@@ -612,7 +658,7 @@ function renderSide() {
 
   if(tab === 'chat') {
     const cs = myChats().filter(c => c.type === 'p');
-    h = cs.length ? cs.map(crow).join('') : '<div class="empty">Belum ada chat.<br>Klik titik 3 > Chat baru untuk memulai.</div>';
+    h = cs.length ? cs.map(crow).join('') : '<div class="empty">Belum ada chat.</div>';
   } else if(tab === 'group') {
     const gs = myChats().filter(c => c.type === 'g');
     h = `<div class="row" id="newg"><div class="av" style="background:var(--green)">👥</div><div class="t"><b>Grup baru</b><small>Buat grup atau gabung lewat link</small></div></div>`;
@@ -621,20 +667,17 @@ function renderSide() {
     const u = db.users[me];
     h = `<div class="acct-card">
       <div id="pfb" style="display:inline-block;cursor:pointer">${av(me,'big')}</div>
-      <div style="margin-top:10px"><small style="color:var(--green)">Ketuk foto untuk ganti / lihat / hapus</small></div>
-      <h2 style="margin:12px 0 2px">@${esc(me)}${vb(me)}</h2>
+      <h2 style="margin:10px 0 2px">@${esc(me)}${vb(me)}</h2>
       <small style="color:var(--sub)">${esc(u.email)}</small>
       <div class="mypr" style="margin-top:4px">${presHtml(me) || '⚪ Online disembunyikan'}</div>
       
-      <div style="text-align:left;margin-top:16px">
-        <label style="font-weight:600;font-size:13px;color:var(--sub)">Bio Profil</label>
-        <textarea id="bio" class="f" rows="3" maxlength="120" placeholder="Tulis bio…" style="margin-top:6px;resize:none">${esc(u.bio || '')}</textarea>
-        <button class="btn" id="sbio" style="background:var(--green)">💾 Simpan Bio</button>
+      <div style="text-align:left;margin-top:14px">
+        <label style="font-weight:600;font-size:12px;color:var(--sub)">Bio Profil</label>
+        <textarea id="bio" class="f-auth" rows="2" maxlength="120" placeholder="Tulis bio…" style="margin-top:4px;resize:none;border-radius:10px;">${esc(u.bio || '')}</textarea>
+        <button class="btn-auth" id="sbio" style="background:var(--green)">💾 Simpan Bio</button>
       </div>
-
-      ${me === BOT ? `<div class="cfg"><small><b>⚙️ Pengaturan Bot</b></small><input class="f" id="yau" placeholder="Endpoint API Cobalt" value="${esc((db.botcfg||{}).api||'')}"><button class="btn" id="ysv">Simpan API</button></div>` : ''}
       
-      <div style="margin-top:16px">
+      <div style="margin-top:12px">
         ${me === 'riyan' ? '<button class="acct-btn" id="own" style="background:linear-gradient(135deg,#6366f1,#a855f7);color:#fff">🛡️ Panel Owner</button>' : ''}
         <button class="acct-btn" id="prv" style="background:var(--panel);border:1px solid var(--line);color:var(--txt)">🔒 Privasi Akun</button>
         <button class="acct-btn" onclick="logout()" style="background:#e5484d;color:#fff">🚪 Keluar dari Akun</button>
@@ -643,19 +686,17 @@ function renderSide() {
   } else {
     const ss = db.status.filter(s => Date.now() - s.t < 864e5 && canSeeS(s)), by = {};
     ss.forEach(s => (by[s.u] = by[s.u] || []).push(s));
-    h = `<div class="row" id="addst">${by[me] ? av(me, 'ring', by[me][by[me].length - 1]) : '<div class="av" style="background:var(--green)">+</div>'}<div class="t"><b>Status saya</b><small>${by[me] ? by[me].length + ' status · ketuk untuk lihat' : 'Ketuk untuk tambah foto/video'}</small></div>${by[me] ? '<button class="ib" id="addmore" title="Tambah">＋</button>' : ''}</div>${(() => { const tg = ss.filter(x => x.u !== me && (x.tags || []).includes(me)).reverse(); return tg.length ? '<div class="sec">🏷 KAMU DITANDAI</div>' + tg.map(x => `<div class="row" data-sid="${esc(sidOf(x))}">${av(x.u, 'ring', x)}<div class="t"><b>@${esc(x.u)}${vb(x.u)}</b><small>Menandai kamu di status · ${hm(x.t)}</small></div></div>`).join('') : ''; })()}<div class="sec">PEMBARUAN TERBARU</div>`;
+    h = `<div class="row" id="addst">${by[me] ? av(me, 'ring', by[me][by[me].length - 1]) : '<div class="av" style="background:var(--green)">+</div>'}<div class="t"><b>Status saya</b><small>${by[me] ? by[me].length + ' status · lihat' : 'Ketuk untuk tambah status'}</small></div></div><div class="sec">PEMBARUAN TERBARU</div>`;
     const o = Object.keys(by).filter(u => u !== me);
-    h += o.length ? o.map(u => `<div class="row" data-s="${u}">${av(u, 'ring', by[u][by[u].length - 1])}<div class="t"><b>@${esc(u)}${vb(u)}</b><small>${by[u].length} status · ${hm(by[u][by[u].length - 1].t)}</small></div></div>`).join('') : '<div class="empty">Belum ada status dari pengguna lain</div>';
+    h += o.length ? o.map(u => `<div class="row" data-s="${u}">${av(u, 'ring', by[u][by[u].length - 1])}<div class="t"><b>@${esc(u)}${vb(u)}</b><small>${by[u].length} status · ${hm(by[u][by[u].length - 1].t)}</small></div></div>`).join('') : '<div class="empty">Belum ada status</div>';
   }
 
   L.innerHTML = h; warm();
-  if(window._lt !== tab) { window._lt = tab; L.classList.remove('an'); void L.offsetWidth; L.classList.add('an'); }
   if(tab === 'acct') {
     if($('#pfb')) $('#pfb').onclick = profMenu;
     if($('#prv')) $('#prv').onclick = () => privMenuWA();
     if($('#own')) $('#own').onclick = ownerPanel;
     if($('#sbio')) $('#sbio').onclick = () => { load(); db.users[me].bio = $('#bio').value.trim(); save(); $('#sbio').textContent = 'Tersimpan ✓'; };
-    if($('#ysv')) $('#ysv').onclick = () => { load(); db.botcfg = { api: $('#yau').value.trim() }; save(); $('#ysv').textContent = 'Tersimpan ✓'; };
   }
 }
 
@@ -664,7 +705,7 @@ function renderCnList() {
   const q = $('#q').value.trim().toLowerCase().replace('@','');
   const L = $('#cnlist');
   const us = Object.keys(db.users).filter(u => u !== me && u.includes(q));
-  L.innerHTML = us.length ? us.map(u => `<div class="row" data-u="${u}">${av(u)}<div class="t"><b>@${esc(u)}${vb(u)}</b><small>${esc(canSeeFeature(u,'bio') ? bioOf(u) : '')}</small></div></div>`).join('') : '<div class="empty">Username tidak ditemukan</div>';
+  L.innerHTML = us.length ? us.map(u => `<div class="row" data-u="${u}">${av(u)}<div class="t"><b>@${esc(u)}${vb(u)}</b></div></div>`).join('') : '<div class="empty">Username tidak ditemukan</div>';
 }
 $('#cn2').onclick = () => { $('#dd').hidden = true; openChatModal(); };
 $('#cnx').onclick = () => { $('#cnm').hidden = true; };
@@ -678,49 +719,27 @@ $('#cnlist').onclick = e => {
   openChat(id);
 };
 
-let chatHoldTimer = null;
-$('#list').addEventListener('pointerdown', e => {
-  const r = e.target.closest('[data-c]'); if(!r) return;
-  chatHoldTimer = setTimeout(async () => {
-    const cid = r.dataset.c, c = db.chats[cid]; if(!c) return;
-    const name = cname(c);
-    if(await ask('Hapus obrolan dengan ' + (c.type === 'g' ? 'grup ' : '@') + name + '?', { ok: 'Hapus Obrolan' })) {
-      load();
-      if(c.type === 'p') delete db.chats[cid];
-      else c.members = c.members.filter(x => x !== me);
-      save();
-      if(cur === cid) { cur = null; $('#app').classList.remove('open'); $('#main').innerHTML = '<div class="ph">Pilih chat atau cari username<br>untuk mulai mengobrol 💬</div>'; }
-      renderSide(); toast('Obrolan terhapus');
-    }
-  }, 600);
-});
-['pointerup','pointerleave','pointermove','pointercancel'].forEach(v => $('#list').addEventListener(v, () => clearTimeout(chatHoldTimer)));
-
 $('#nc').onclick = () => { tab = 'chat'; renderSide(); };
 $('#ns').onclick = () => { tab = 'status'; renderSide(); };
 $('#nr').onclick = () => { tab = 'group'; renderSide(); };
 $('#na').onclick = () => { tab = 'acct'; renderSide(); };
 $('#mb').onclick = e => { e.stopPropagation(); $('#dd').hidden = !$('#dd').hidden; };
-document.addEventListener('click', () => { $('#dd').hidden = true; ['#cd','#ad'].forEach(q => { const d = $(q); if(d) d.hidden = true; }); });
+document.addEventListener('click', () => { $('#dd').hidden = true; });
 
 $('#list').onclick = e => {
   const r = e.target.closest('[data-u],[data-c],[data-s],[data-sid],#addst,#newg'); if(!r) return;
-  if(e.target.id === 'addmore') return $('#sf').click();
   if(r.id === 'newg') { $('#gm').hidden = false; $('#ge').textContent = ''; }
   else if(r.dataset.c) openChat(r.dataset.c);
-  else if(r.dataset.sid) openStatusById(r.dataset.sid);
   else if(r.dataset.s) viewS(r.dataset.s);
   else { const mine = db.status.filter(s => s.u === me && Date.now() - s.t < 864e5); mine.length ? viewS(me) : $('#sf').click(); }
 };
 
-/* CHAT & MEDIA */
 function openChat(id) { 
   if(cur !== id) stopMedia(); 
   cur = id; 
   $('#app').classList.add('open'); 
   tab = db.chats[id].type === 'g' ? 'group' : 'chat'; 
   
-  // FIX BUBBLE NOTIFIKASI LANGSUNG HILANG SAAT CHAT DIBUKA
   load();
   let changed = false;
   db.chats[id].msgs.forEach(m => {
@@ -744,11 +763,8 @@ function renderChat(bottom) {
     let lp; const MS = $('#msgs');
     MS.addEventListener('pointerdown', e => { const el = e.target.closest('.m'); if(el) lp = setTimeout(() => mmenu(+el.dataset.i), 500); });
     ['pointerup','pointerleave','pointermove','pointercancel'].forEach(v => MS.addEventListener(v, () => clearTimeout(lp)));
-    MS.addEventListener('contextmenu', e => { const el = e.target.closest('.m'); if(el) { e.preventDefault(); clearTimeout(lp); mmenu(+el.dataset.i); } });
     MS.addEventListener('click', e => {
       const a = e.target.closest('.ul'); if(a) { e.preventDefault(); return a.dataset.g ? joinCode(a.dataset.g) : openUser(a.dataset.un); }
-      const stg = e.target.closest('[data-st]'); if(stg) return openStatusById(stg.dataset.st);
-      const o = e.target.closest('[data-ot]'); if(o) return openOnce(+o.closest('.m').dataset.i);
       const t = e.target.closest('.vt,.im'); if(t) openMv(+t.dataset.i);
     });
     $('#at').onclick = e => { e.stopPropagation(); $('#ad').hidden = !$('#ad').hidden; };
@@ -758,92 +774,78 @@ function renderChat(bottom) {
     $('#sd').onclick = send; $('#tx').onkeydown = e => { if(e.key === 'Enter') send(); };
   }
   $('#ca').innerHTML = av(n, '', c.type === 'g' && c.pic ? { mt: 'i', src: c.pic } : null);
-  $('#cn').innerHTML = c.type === 'g' ? '👥 ' + esc(n) : '@' + esc(n) + vb(n) + (n === me ? ' <small>(anda)</small>' : '');
+  $('#cn').innerHTML = c.type === 'g' ? '👥 ' + esc(n) : '@' + esc(n) + vb(n);
   const hi = () => { if(c.type === 'g') ginfo(); else uinfo(n); };
   $('#cn').onclick = $('#ca').onclick = $('#cm').onclick = hi; $('#cn').style.cursor = $('#ca').style.cursor = 'pointer'; applyWp();
   hdrSub(c);
 
   const B = $('#msgs'), near = bottom || B.scrollHeight - B.scrollTop - B.clientHeight < 80;
-  const pl = [...B.querySelectorAll('audio')].filter(a => !a.paused).map(a => ({ i: a.dataset.i, t: a.currentTime }));
-  const HT = c.msgs.length ? c.msgs.map((m, i) => (m.d || []).includes(me) ? '' : m.f === '!' ? `<div class="empty" style="padding:4px;font-size:12px">${esc(m.text)}</div>` : `<div class="m ${m.f === me ? 'me' : ''}" data-i="${i}">${c.type === 'g' && m.f !== me ? `<div class="n">@${esc(m.f)}${vb(m.f)}${isAdm(c, m.f) ? ' <small>· admin</small>' : ''}</div>` : ''}${m.x ? '<i style="opacity:.6">🚫 Pesan telah dihapus</i>' : mhtml(m, i) + (m.text ? lk(m.text) : '')}<small>${m.e && !m.x ? 'diedit · ' : ''}${hm(m.t)}${m.f === me ? tick(c, m) : ''}</small></div>`).join('') : '<div class="empty">Belum ada pesan. Sapa dulu! 👋</div>';
+  const HT = c.msgs.length ? c.msgs.map((m, i) => (m.d || []).includes(me) ? '' : m.f === '!' ? `<div class="empty" style="padding:4px;font-size:12px">${esc(m.text)}</div>` : `<div class="m ${m.f === me ? 'me' : ''}" data-i="${i}">${c.type === 'g' && m.f !== me ? `<div class="n">@${esc(m.f)}${vb(m.f)}${isAdm(c, m.f) ? ' <small>· admin</small>' : ''}</div>` : ''}${m.x ? '<i style="opacity:.6">🚫 Pesan dihapus</i>' : mhtml(m, i) + (m.text ? lk(m.text) : '')}<small>${m.e && !m.x ? 'diedit · ' : ''}${hm(m.t)}${m.f === me ? tick(c, m) : ''}</small></div>`).join('') : '<div class="empty">Belum ada pesan 👋</div>';
   
-  if(B._h !== HT) {
-    B._h = HT; B.innerHTML = HT; hyd(B);
-    pl.forEach(o => { const a = B.querySelector('audio[data-i="' + o.i + '"]'); if(a) { a.currentTime = o.t; a.play().catch(() => {}); } });
-  }
+  if(B._h !== HT) { B._h = HT; B.innerHTML = HT; hyd(B); }
   if(near) B.scrollTop = B.scrollHeight;
-
-  let ch = 0;
-  c.msgs.forEach(m => { if(m.f !== me && m.f !== '!' && !(m.r = m.r || []).includes(me)) { m.r.push(me); ch = 1; } });
-  if(ch) { save(); renderSide(); }
 }
 
 function push(m) { const c = db.chats[cur], g = { f: me, t: Date.now(), r: [], ...m }; c.msgs.push(g); if(save()) { renderSide(); renderChat(true); botWatch(c.id, g); } else c.msgs.pop(); }
-function send() { const t = $('#tx').value.trim(); if(!t || !cur || !canSend()) return; $('#tx').value = ''; push({ text: t }); }
+function send() { const t = $('#tx').value.trim(); if(!t \vert{}\vert{} !cur \vert{}\vert{} !canSend()) return; $('#tx').value = ''; push({ text: t }); }
 
-$('#af').onchange = async e => {
-  const k = e.target.dataset.k || 'i'; e.target.dataset.k = 'i';
-  const f = await takeFile(e.target); if(!f || !cur || !canSend()) return;
-  const ty = f.type || '', isI = ty.startsWith('image/') || /\.(heic|heif|jpe?g|png|webp|gif)$/i.test(f.name);
-  if(k === 'i' || k === 'o') {
-    if(!isI) return toast('Pilih file foto');
-    const r = await editImg(f, { q: 1, crop: 1, ok: k === 'o' ? 'Kirim 1x lihat' : 'Kirim' }); if(!r) return;
-    const src = await b2d(r); const mid = await mput(r).catch(() => null);
-    if(mid) urls.set(mid, src);
-    return push({ mid, src, mt: 'i', fn: f.name, fs: r.size, ...(k === 'o' ? { o: 1 } : {}) });
-  }
-  const mt = k === 'v' && (ty.startsWith('video/') || /\.(mp4|mov|3gp|webm|mkv)$/i.test(f.name)) ? 'v' : k === 'a' && ty.startsWith('audio/') ? 'a' : 'f';
-  toast('Mengirim ' + f.name + '…');
-  let mid; try { mid = await mput(f); } catch(x) {}
-  const src = f.size < 5e6 ? await b2d(f) : '';
-  if(mid) urls.set(mid, URL.createObjectURL(f));
-  push({ mid, src, mt, fn: f.name, fs: f.size });
-};
-
-function prep(f) {
-  return new Promise(ok => {
-    if(f.type.startsWith('video/')) {
-      const r = new FileReader(); r.onload = () => ok({ type: 'v', src: r.result }); r.readAsDataURL(f);
-    } else if(f.type.startsWith('image/')) {
-      const r = new FileReader(); r.onload = () => {
-        const i = new Image(); i.onload = () => {
-          const c = document.createElement('canvas'); c.width = i.width; c.height = i.height;
-          c.getContext('2d').drawImage(i, 0, 0); ok({ type: 'i', src: c.toDataURL('image/jpeg', .9) });
-        }; i.src = r.result;
-      }; r.readAsDataURL(f);
-    } else ok(null);
-  });
-}
-
-/* STATUS */
+/* STATUS SYSTEM */
 $('#sf').onchange = async e => {
   const f = await takeFile(e.target); if(!f) return;
   const mt = f.type.startsWith('video/') ? 'v' : f.type.startsWith('image/') ? 'i' : null;
   if(!mt) return toast('Pilih foto atau video');
   if(!canSend()) return;
-  toast('Memproses media status…');
+  toast('Memproses status…');
   const mediaData = await prep(f); if(!mediaData) return;
-  const r = await composeS(f, mt); if(!r) return;
   const mid = await mput(f).catch(() => null);
   if(mid) urls.set(mid, mediaData.src);
   load();
-  const st = { id: 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), u: me, t: Date.now(), mt, mid, src: mediaData.src, cap: r.cap };
-  const tags = r.tags.filter(u => u !== me && db.users[u] && !BOTS.includes(u));
-  if(tags.length) st.tags = tags;
+  const st = { id: 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), u: me, t: Date.now(), mt, mid, src: mediaData.src, cap: '', views: [] };
   db.status.push(st);
-  tags.forEach(u => tagMsg(u, st));
-  if(save()) {
-    tab = 'status'; renderSide();
-    toast(tags.length ? 'Status diposting · ' + tags.length + ' orang ditandai' : 'Status diposting');
-  }
+  if(save()) { tab = 'status'; renderSide(); toast('Status diposting'); }
 };
 
 let vs = [], vi = 0;
 async function viewS(u) { vs = visS(u); vi = 0; await Promise.all(vs.filter(x => x.mid).map(x => murl(x.mid))); if(vs.length) showS(); }
+
 function showS() {
   const s = vs[vi], V = $('#vw'); V.hidden = false;
   const mediaSrc = s.src || urls.get(s.mid) || '';
-  V.innerHTML = `<div style="position:absolute;top:calc(12px + env(safe-area-inset-top,0px));left:16px;display:flex;gap:10px;align-items:center">${av(s.u)}<div><b>@${esc(s.u)}</b><br><small>${hm(s.t)} · ${vi+1}/${vs.length}</small></div></div>${s.mt === 'v' ? `<video src="${mediaSrc}" autoplay controls playsinline onclick="event.stopPropagation()"></video>` : `<img src="${mediaSrc}">`}<p>${esc(s.cap || '')}</p>${tagInfo(s)}<small style="opacity:.6">Ketuk untuk lanjut · hilang otomatis dalam ${Math.max(1, Math.ceil((864e5 - (Date.now() - s.t)) / 36e5))} jam</small>${s.u === me ? `<button style="margin-top:10px;background:#e5484d;color:#fff;padding:8px 16px;border-radius:8px" onclick="event.stopPropagation();delS(${vi})">🗑 Hapus status</button>` : ''}`;
+  
+  if(s.u !== me) {
+    load();
+    const stObj = db.status.find(x => x.id === s.id || (x.u === s.u && x.t === s.t));
+    if(stObj) {
+      stObj.views = stObj.views || [];
+      if(!stObj.views.includes(me)) {
+        stObj.views.push(me);
+        save();
+      }
+    }
+  }
+
+  $('#st-hdr').innerHTML = `${av(s.u)}<div><b>@${esc(s.u)}</b><br><small>${hm(s.t)} · ${vi+1}/${vs.length}</small></div>`;
+  $('#st-body').innerHTML = s.mt === 'v' ? `<video src="${mediaSrc}" autoplay controls playsinline></video>` : `<img src="${mediaSrc}">`;
+  
+  let ftrHTML = `<p style="margin:4px 0">${esc(s.cap || '')}</p>`;
+  if(s.u === me) {
+    const viewCount = (s.views || []).length;
+    ftrHTML += `<div class="status-views-btn" onclick="openViewsModal('${s.id}')">👁️ ${viewCount} Dilihat</div> `;
+    ftrHTML += `<button style="background:#e5484d;color:#fff;padding:4px 10px;border-radius:12px;font-size:12px;margin-left:6px;" onclick="delS(${vi})">🗑️ Hapus</button>`;
+  }
+  $('#st-ftr').innerHTML = ftrHTML;
+}
+
+function nextStatus() { vi++; vi < vs.length ? showS() : ($('#vw').hidden = true); }
+
+function openViewsModal(sid) {
+  load();
+  const s = db.status.find(x => x.id === sid);
+  if(!s) return;
+  const views = s.views || [];
+  const L = $('#st-views-list');
+  L.innerHTML = views.length ? views.map(u => `<div class="row">${av(u)}<div class="t"><b>@${esc(u)}</b></div></div>`).join('') : '<div class="empty">Belum ada yang melihat status ini</div>';
+  $('#st-views-modal').hidden = false;
 }
 
 async function delS(i) {
@@ -851,183 +853,14 @@ async function delS(i) {
   const s = vs[i]; if(s.mid) mdel(s.mid);
   load(); db.status = db.status.filter(x => !(x.u === s.u && x.t === s.t)); save();
   vs.splice(i, 1); if(vi >= vs.length) vi = vs.length - 1;
-  if(vs.length) showS(); else { $('#vw').hidden = true; $('#vw').innerHTML = ''; }
+  if(vs.length) showS(); else { $('#vw').hidden = true; }
   renderSide();
 }
-$('#vw').onclick = () => { vi++; vi < vs.length ? showS() : ($('#vw').hidden = true, $('#vw').innerHTML = ''); };
 
-/* GRUP */
-$('#ng').onclick = () => { $('#gm').hidden = false; $('#ge').textContent = ''; };
-let gPic = null; const gmpReset = () => { gPic = null; const p = $('#gmp'); p.style.backgroundImage = ''; p.textContent = '📷'; };
-$('#gx').onclick = () => { $('#gm').hidden = true; gmpReset(); };
-$('#gmp').onclick = () => $('#gpf2').click();
-$('#gpf2').onchange = async e => {
-  const f = await takeFile(e.target); if(!f) return;
-  const b = await editImg(f, { circle: 1, out: 256, ok: 'Pakai foto', title: 'Foto grup' }); if(!b) return;
-  gPic = await b2d(b); const p = $('#gmp'); p.style.backgroundImage = `url('${gPic}')`; p.textContent = '';
-};
-$('#gc').onclick = () => {
-  load(); const n = $('#gn').value.trim(), bio = $('#gbio').value.trim(), us = [...new Set($('#gu').value.toLowerCase().split(/[,\s]+/).map(x => x.replace('@','')).filter(Boolean))].filter(x => x !== me);
-  if(!n) return $('#ge').textContent = 'Nama grup wajib diisi';
-  if(!us.length) return $('#ge').textContent = 'Tambahkan minimal 1 anggota';
-  const bad = us.filter(x => !db.users[x]); if(bad.length) return $('#ge').textContent = 'Tidak ditemukan: ' + bad.join(', ');
-  const id = 'g:' + Date.now();
-  db.chats[id] = { id, type: 'g', name: n, bio: bio, members: [me, ...us], msgs: [], created: Date.now(), code: gcode(), admins: [me], ...(gPic ? { pic: gPic } : {}) };
-  if(!save()) return; $('#gm').hidden = true; $('#gn').value = $('#gbio').value = $('#gu').value = ''; gmpReset(); openChat(id);
-};
-
-function link(c) { if(!c.code) { c.code = gcode(); save(); } return 'chme.group/' + c.code; }
-function joinCode(k) {
-  load(); const c = Object.values(db.chats).find(x => x.code === k); if(!c) return toast('Link undangan tidak valid');
-  if(!c.members.includes(me)) { c.members.push(me); c.msgs.push({ f: '!', t: Date.now(), text: '@' + me + ' bergabung lewat link' }); save(); }
-  try { history.replaceState(null, '', location.pathname + location.search); } catch(e) {} openChat(c.id);
-}
-$('#gj').onclick = () => {
-  const v = $('#gl').value.trim(), k = v.split(/join=|chme\.group\//).pop().trim();
-  if(!k) return $('#ge').textContent = 'Tempel link undangan';
-  $('#gm').hidden = true; $('#gl').value = ''; joinCode(k);
-};
-
-function ginfo() {
-  const c = db.chats[cur], admin = isAdm(c, me);
-  $('#gt').textContent = '👥 ' + c.name;
-  $('#gbio_disp').textContent = c.bio || 'Tidak ada deskripsi grup';
-  $('#gc2').textContent = c.members.length + ' anggota';
-  $('#gav').innerHTML = av(c.name, 'big', c.pic ? { mt: 'i', src: c.pic } : null);
-  $('#g_admin_opts').style.display = admin ? 'block' : 'none';
-  if(admin) $('#lk').textContent = link(c);
-
-  $('#mlist').innerHTML = c.members.map(u => `<div class="mem" data-pm="${u}" style="cursor:pointer">${av(u)}<div><b>@${esc(u)}${vb(u)}</b>${isAdm(c, u) ? ' <small style="color:var(--green)">· admin</small>' : ''}${u === me ? ' (kamu)' : ''}${admin && u !== me ? `<br><button class="chip" style="flex:none;padding:3px 8px" data-act="adm" data-u="${u}">${isAdm(c, u) ? 'Unadmin' : 'Jadikan admin'}</button> <button class="chip" style="flex:none;padding:3px 8px" data-act="kick" data-u="${u}">Kick</button>` : ''}<br><small style="color:var(--sub)">${esc(canSeeFeature(u, 'bio') ? bioOf(u) : '')}</small></div></div>`).join('');
-  $('#ae').textContent = ''; $('#gi').hidden = false;
-}
-
-$('#gedit').onclick = async () => {
-  load(); const c = db.chats[cur]; if(!isAdm(c, me)) return;
-  const newName = await ask('Ubah Nama Grup', { input: 1, def: c.name, ok: 'Lanjut' }); if(!newName || !newName.trim()) return;
-  const newBio = await ask('Ubah Deskripsi Grup', { input: 1, def: c.bio || '', ok: 'Simpan' });
-  c.name = newName.trim(); c.bio = (newBio || '').trim();
-  c.msgs.push({ f: '!', t: Date.now(), text: '@' + me + ' memperbarui info grup' });
-  save(); ginfo(); renderChat(); renderSide(); toast('Info grup diperbarui');
-};
-
-$('#mlist').onclick = e => {
-  const a = e.target.dataset.act; if(a) { grpAct(a, e.target.dataset.u); return; }
-  const x = e.target.closest('[data-pm]'); if(!x || x.dataset.pm === me) return;
-  const u = x.dataset.pm, id = 'p:' + [me, u].sort().join(':');
-  $('#gi').hidden = true; load();
-  if(!db.chats[id]) { db.chats[id] = { id, type: 'p', members: [me, u], msgs: [], created: Date.now() }; save(); }
-  openChat(id);
-};
-
-/* MENU PESAN */
-let mi = 0;
-function mmenu(i) {
-  const c = db.chats[cur], m = c.msgs[i]; if(!m || m.f === '!') return;
-  const mine = m.f === me && !m.x; mi = i;
-  $('#mb2').innerHTML = `
-    ${mine ? '<button data-k="info">ℹ️ Info pesan</button>' : ''}
-    ${mine && m.text ? '<button data-k="edit">✏️ Edit pesan</button>' : ''}
-    <button data-k="fwd">↗️ Teruskan pesan</button>
-    <button data-k="dme">🗑️ Hapus untuk saya</button>
-    ${mine ? '<button data-k="dall">🗑️ Hapus untuk semua</button>' : ''}
-    ${(m.mid || m.src || m.media) && !m.o ? '<button data-k="dl">💾 Simpan / unduh</button>' : ''}
-    <button data-k="x">Batal</button>
-  `;
-  $('#mm').hidden = false;
-}
-
-$('#mb2').onclick = async e => {
-  const k = e.target.dataset.k; if(!k) return;
-  $('#mm').hidden = true;
-  if(k === 'x') return;
-  if(k === 'dl') return dlMsg(mi);
-  if(k === 'fwd') return openFwdModal(mi);
-
-  let t;
-  if(k === 'edit') { t = await ask('Edit pesan', { input: 1, def: db.chats[cur].msgs[mi].text, ok: 'Simpan' }); if(!t || !t.trim()) return; }
-  if(k === 'dall' && !await ask('Hapus untuk semua orang?', { ok: 'Hapus' })) return;
-
-  load(); const c = db.chats[cur], m = c.msgs[mi], o = c.members.filter(x => x !== me);
-  if(k === 'info') {
-    const rd = (m.r || []).filter(x => o.includes(x)), L = a => a.map(u => `<div class="mem">${av(u)}@${esc(u)}</div>`).join('');
-    $('#it').innerHTML = `<div class="sec" style="padding-left:0">TERKIRIM KE</div>${L(o)}<div class="sec" style="padding-left:0">DILIHAT OLEH (${rd.length}/${o.length})</div>${rd.length ? L(rd) : '<small style="color:var(--sub)">Belum ada yang melihat</small>'}`;
-    $('#im').hidden = false; return;
-  }
-  if(k === 'edit') { m.text = t.trim(); m.e = 1; }
-  if(k === 'dme') (m.d = m.d || []).push(me);
-  if(k === 'dall') { m.x = 1; m.text = ''; m.media = null; m.src = null; if(m.mid) { mdel(m.mid); m.mid = null; } }
-  save(); renderChat(); renderSide();
-};
-
-let fwdMsgObj = null;
-function openFwdModal(i) {
-  fwdMsgObj = db.chats[cur].msgs[i]; $('#fwdm').hidden = false;
-  const L = $('#fwdlist'), cs = myChats();
-  L.innerHTML = cs.map(c => `<div class="row" data-fc="${c.id}">${av(cname(c), '', c.type === 'g' && c.pic ? { mt: 'i', src: c.pic } : null)}<div class="t"><b>${c.type === 'g' ? '👥 ' : '@'}${esc(cname(c))}</b></div></div>`).join('');
-}
-
-$('#fwdx').onclick = () => $('#fwdm').hidden = true;
-$('#fwd_status').onclick = async () => {
-  if(!fwdMsgObj || !canSend()) return; load();
-  const st = { id: 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), u: me, t: Date.now(), mt: fwdMsgObj.mt || null, mid: fwdMsgObj.mid || null, src: fwdMsgObj.src || null, cap: fwdMsgObj.text || '' };
-  db.status.push(st);
-  if(save()) { $('#fwdm').hidden = true; tab = 'status'; renderSide(); toast('Pesan berhasil diteruskan ke status ✓'); }
-};
-
-$('#fwdlist').onclick = e => {
-  const r = e.target.closest('[data-fc]'); if(!r || !fwdMsgObj || !canSend()) return;
-  load(); const targetC = db.chats[r.dataset.fc];
-  if(targetC) {
-    targetC.msgs.push({ f: me, t: Date.now(), r: [], text: fwdMsgObj.text || '', mt: fwdMsgObj.mt || null, mid: fwdMsgObj.mid || null, src: fwdMsgObj.src || null, fn: fwdMsgObj.fn || null, fs: fwdMsgObj.fs || null });
-    save(); $('#fwdm').hidden = true; openChat(targetC.id); toast('Pesan diteruskan ✓');
-  }
-};
-
-$('#pf').onchange = async e => {
-  const f = await takeFile(e.target); if(!f) return;
-  const b = await editImg(f, { circle: 1, out: 256, ok: 'Pasang foto profil', title: 'Foto profil' }); if(!b) return;
-  const d = await b2d(b); load(); if(!db.users[me]) return; db.users[me].pic = d;
-  if(save()) { try { document.activeElement.blur(); } catch(x) {} refreshAll(); toast('Foto profil diperbarui ✓'); }
-};
-$('#us').oninput = () => { if(reg) { load(); $('#er').textContent = db.users[$('#us').value.trim().toLowerCase()] ? 'Username sudah dipakai' : ''; } };
-$('#gpc').onclick = () => $('#gpf').click();
-$('#gav').onclick = () => { const g = db.chats[cur]; if(g && g.pic) showPic(g.pic); };
-$('#gpf').onchange = async e => {
-  const f = await takeFile(e.target); if(!f) return;
-  const b = await editImg(f, { circle: 1, out: 256, ok: 'Pasang foto grup', title: 'Foto grup' }); if(!b) return;
-  const d = await b2d(b); load(); const g = db.chats[cur]; if(!g || g.type !== 'g') return; g.pic = d;
-  g.msgs.push({ f: '!', t: Date.now(), text: '@' + me + ' mengganti foto grup' });
-  if(save()) { ginfo(); renderChat(); renderSide(); toast('Foto grup diperbarui ✓'); }
-};
-$('#gpd').onclick = async () => {
-  if(!await ask('Hapus foto grup?', { ok: 'Hapus' })) return;
-  load(); const g = db.chats[cur]; if(!g) return; delete g.pic;
-  g.msgs.push({ f: '!', t: Date.now(), text: '@' + me + ' menghapus foto grup' });
-  save(); ginfo(); renderChat(); renderSide(); toast('Foto grup dihapus');
-};
-$('#gz').onclick = () => $('#gi').hidden = true;
-$('#ab').onclick = () => {
-  load(); const c = db.chats[cur], u = $('#au').value.trim().toLowerCase().replace('@','');
-  if(!isAdm(c, me)) return toast('Hanya admin yang bisa menambah anggota');
-  if(!db.users[u]) return $('#ae').textContent = 'Username tidak ditemukan';
-  if(c.members.includes(u)) return $('#ae').textContent = 'Sudah menjadi anggota';
-  c.members.push(u); c.msgs.push({ f: '!', t: Date.now(), text: '@' + me + ' menambahkan @' + u });
-  save(); $('#au').value = ''; ginfo(); renderChat(true); renderSide();
-};
-$('#cp').onclick = async () => { const t = $('#lk').textContent; try { await navigator.clipboard.writeText(t); $('#cp').textContent = 'Tersalin ✓'; setTimeout(() => $('#cp').textContent = 'Salin link', 1500); } catch(e) { toast('Salin manual dari kotak link'); } };
-$('#ga').onclick = async () => {
-  if(!await ask('Keluar dari grup?', { ok: 'Keluar' })) return;
-  stopMedia(); load(); const c = db.chats[cur]; c.members = c.members.filter(x => x !== me);
-  c.msgs.push({ f: '!', t: Date.now(), text: '@' + me + ' keluar' }); save();
-  $('#gi').hidden = true; cur = null; $('#app').classList.remove('open');
-  $('#main').innerHTML = '<div class="ph">Pilih chat atau cari username<br>untuk mulai mengobrol 💬</div>';
-  renderSide();
-};
-
-function toast(m) { const t = $('#ts'); t.textContent = m; t.classList.add('on'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('on'), 2600); }
+function toast(m) { const t = $('#ts'); t.textContent = m; t.classList.add('on'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('on'), 2500); }
 function ask(t, o = {}) {
   return new Promise(res => {
-    const i = $('#dgi'); $('#dgt').textContent = t; i.hidden = !o.input; i.value = o.def || ''; $('#dgo').textContent = o.ok || 'OK'; $('#dg').hidden = false;
+    const i = $('#dgi'); $('#dgt').textContent = t; i.hidden = !o.input; i.value = o.def || ''; $('#dgo').textContent = o.ok \vert{}\vert{} 'OK'; $('#dg').hidden = false;
     if(o.input) setTimeout(() => i.focus(), 60);
     const done = v => { $('#dg').hidden = true; res(v); };
     $('#dgo').onclick = () => done(o.input ? i.value : true); $('#dgc').onclick = () => done(o.input ? null : false);
@@ -1037,571 +870,99 @@ function ask(t, o = {}) {
 
 function uinfo(u) {
   const x = db.users[u] || {}; $('#uav').innerHTML = av(u, 'big'); $('#unm').innerHTML = '@' + esc(u) + vb(u);
-  const B = canSeeFeature(u, 'bio') ? bioOf(u) : 'Bio disembunyikan';
-  $('#ubio').textContent = u === 'riyan' ? '👑 Owner Hitler' + (B ? ' · ' + B : '') : B;
+  $('#ubio').textContent = canSeeFeature(u, 'bio') ? bioOf(u) : 'Bio disembunyikan';
   $('#upr').innerHTML = presHtml(u);
-  $('#uav').onclick = () => { if(canSeeFeature(u, 'pic') && x.pic) showPic(x.pic); };
   $('#um').hidden = false;
 }
 $('#uc').onclick = () => $('#um').hidden = true;
 
-/* WALLPAPER & INDEXED DB */
-const WP = ['', 'linear-gradient(160deg,#dfeee9,#f3e9dc)', 'linear-gradient(160deg,#cfe0f3,#eadcf5)', 'linear-gradient(160deg,#f6d9cf,#f3ead0)', 'radial-gradient(circle at 20% 15%,#ffd9cc,transparent 55%),radial-gradient(circle at 85% 85%,#cfe6ff,transparent 55%),#f5f1ec', 'linear-gradient(160deg,#16262b,#2d4a50)', 'linear-gradient(160deg,#1f2233,#3d3a5c)', 'linear-gradient(160deg,#27382e,#6b8f71)'];
+const WP = ['', 'linear-gradient(160deg,#dfeee9,#f3e9dc)', 'linear-gradient(160deg,#cfe0f3,#eadcf5)', 'linear-gradient(160deg,#2d4a50,#16262b)'];
 let ws = { v: '', dim: 0, blur: 0 }, wsc = 'both';
-const wbg = v => v ? (v.startsWith('data:') ? `url('${v}') center/cover` : v) : '';
-function wpStyle(l, d, w) { l.style.background = wbg(w.v); l.style.filter = `blur(${w.blur || 0}px)`; d.style.background = `rgba(0,0,0,${(w.dim || 0) / 100})`; }
-function applyWp() { const l = $('#wpl'); if(!l || !cur || !db.chats[cur]) return; wpStyle(l, $('#wpd'), ((db.users[me].wp || {})[db.chats[cur].type === 'g' ? 'group' : 'private']) || {}); }
+function wpStyle(l, d, w) { l.style.background = w.v || ''; l.style.filter = `blur(${w.blur || 0}px)`; d.style.background = `rgba(0,0,0,${(w.dim || 0) / 100})`; }
+function applyWp() { const l = $('#wpl'); if(!l \vert{}\vert{} !cur \vert{}\vert{} !db.chats[cur]) return; wpStyle(l, $('#wpd'), ((db.users[me].wp || {})[db.chats[cur].type === 'g' ? 'group' : 'private']) || {}); }
 function wpRender() {
-  $('#wpg').innerHTML = WP.map((v, i) => `<button class="sw ${ws.v === v ? 'on' : ''}" data-i="${i}" style="background:${v || 'var(--chatbg)'}">${i ? '' : '∅'}</button>`).join('') + '<button class="sw" data-i="up" style="background:var(--bg)">📷</button>';
-  document.querySelectorAll('.chip').forEach(b => b.classList.toggle('on', b.dataset.s === wsc));
-  wpStyle($('#pl'), $('#pd'), ws); $('#rb').value = ws.blur || 0; $('#rd').value = ws.dim || 0;
+  $('#wpg').innerHTML = WP.map((v, i) => `<button class="sw" data-i="${i}" style="background:${v || 'var(--chatbg)'}">${i ? '' : '∅'}</button>`).join('');
+  wpStyle($('#pl'), $('#pd'), ws);
 }
-function wpOpen() { $('#dd').hidden = true; if($('#cd')) $('#cd').hidden = true; const k = cur && db.chats[cur] && db.chats[cur].type === 'g' ? 'group' : 'private'; ws = { v: '', dim: 0, blur: 0, ...(((db.users[me].wp || {})[k]) || {}) }; wsc = 'both'; wpRender(); $('#wm').hidden = false; }
-$('#wpg').onclick = e => { const b = e.target.closest('.sw'); if(!b) return; if(b.dataset.i === 'up') return $('#wf').click(); ws.v = WP[+b.dataset.i]; wpRender(); };
-$('#sc').onclick = e => { const b = e.target.closest('.chip'); if(b) { wsc = b.dataset.s; wpRender(); } };
-$('#rb').oninput = e => { ws.blur = +e.target.value; wpStyle($('#pl'), $('#pd'), ws); }; $('#rd').oninput = e => { ws.dim = +e.target.value; wpStyle($('#pl'), $('#pd'), ws); };
-$('#wf').onchange = async e => {
-  const f = await takeFile(e.target); if(!f) return;
-  const fr = new FileReader(); fr.onload = () => {
-    const i = new Image(); i.onload = () => {
-      const k = Math.min(1, 900 / Math.max(i.width, i.height)), c = document.createElement('canvas'); c.width = i.width * k; c.height = i.height * k;
-      c.getContext('2d').drawImage(i, 0, 0, c.width, c.height); ws.v = c.toDataURL('image/jpeg', .7); wpRender();
-    }; i.src = fr.result;
-  }; fr.readAsDataURL(f);
-};
-function wpSave(del) {
-  load(); const u = db.users[me]; u.wp = u.wp || {};
-  ['private', 'group'].forEach(k => { if(wsc === 'both' || wsc === k) { if(del) delete u.wp[k]; else u.wp[k] = { ...ws }; } });
-  if(save()) { $('#wm').hidden = true; applyWp(); toast(del ? 'Wallpaper dikembalikan' : 'Wallpaper diterapkan'); }
-}
-$('#wpm').onclick = wpOpen; $('#wa').onclick = () => wpSave(); $('#wr').onclick = () => wpSave(1); $('#wx').onclick = () => $('#wm').hidden = true;
+function wpOpen() { $('#dd').hidden = true; if($('#cd')) $('#cd').hidden = true; const k = cur && db.chats[cur] && db.chats[cur].type === 'g' ? 'group' : 'private'; ws = { v: '', dim: 0, blur: 0, ...(((db.users[me].wp || {})[k]) || {}) }; wpRender(); $('#wm').hidden = false; }
+$('#wpg').onclick = e => { const b = e.target.closest('.sw'); if(!b) return; ws.v = WP[+b.dataset.i]; wpRender(); };
+$('#wa').onclick = () => { load(); const u = db.users[me]; u.wp = u.wp || {}; u.wp.private = u.wp.group = { ...ws }; save(); $('#wm').hidden = true; applyWp(); toast('Wallpaper diterapkan'); };
+$('#wx').onclick = () => $('#wm').hidden = true;
 
-const idb = new Promise((ok, no) => { try { const q = indexedDB.open('chatku_media', 1); q.onupgradeneeded = () => q.result.createObjectStore('m'); q.onsuccess = () => ok(q.result); q.onerror = () => no(q.error); } catch(e) { no(e); } }); idb.catch(() => {});
+const idb = new Promise((ok, no) => { try { const q = indexedDB.open('chatku_media', 1); q.onupgradeneeded = () => q.result.createObjectStore('m'); q.onsuccess = () => ok(q.result); q.onerror = () => no(q.error); } catch(e) { no(e); } });
 const tx = async (mode, fn) => { const d = await idb; return new Promise((ok, no) => { const t = d.transaction('m', mode), q = fn(t.objectStore('m')); t.oncomplete = () => ok(q.result); t.onerror = () => no(t.error); }); };
 const mmem = new Map();
 const mput = async b => { const id = 'm' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); try { await tx('readwrite', s => s.put({ b, ty: b.type }, id)); } catch(e) { mmem.set(id, b); } return id; };
 const mdel = id => { mmem.delete(id); return tx('readwrite', s => s.delete(id)).catch(() => {}); };
 const urls = new Map();
 async function murl(id) { if(urls.has(id)) return urls.get(id); try { let b = mmem.get(id); if(!b) { const r = await tx('readonly', s => s.get(id)); b = r && (r.b ? new Blob([r.b], { type: r.ty || r.b.type }) : r); } const u = b ? URL.createObjectURL(b) : ''; urls.set(id, u); return u; } catch(e) { urls.set(id, ''); return ''; } }
-function hyd(root) { root.querySelectorAll('[data-mid]').forEach(async el => { const a = el.tagName === 'A' ? 'href' : 'src', c = el.getAttribute(a); if(c && c !== '#' && !c.startsWith('data:image/gif')) return; const u = await murl(el.dataset.mid); if(u) el.setAttribute(a, u + (el.closest('.vt') ? '#t=0.1' : '')); }); }
+function hyd(root) { root.querySelectorAll('[data-mid]').forEach(async el => { const a = el.tagName === 'A' ? 'href' : 'src', c = el.getAttribute(a); if(c && c !== '#' && !c.startsWith('data:image/gif')) return; const u = await murl(el.dataset.mid); if(u) el.setAttribute(a, u); }); }
 function warm() { const ids = [...new Set(db.status.filter(s => s.mid && !urls.has(s.mid)).map(s => s.mid))]; if(ids.length) Promise.all(ids.map(murl)).then(() => renderSide()); }
-const fsz = n => n > 1e6 ? (n / 1e6).toFixed(1) + ' MB' : Math.max(1, Math.round((n || 0) / 1e3)) + ' KB';
 
 function mhtml(m, i) {
-  const id = m.mid;
-  if(m.sm) { const st = db.status.find(x => sidOf(x) === m.sid && Date.now() - x.t < 864e5), o = ((db.chats[cur] || { members: [] }).members.find(x => x !== me)) || ''; return `<div class="ot smn" data-st="${esc(m.sid || '')}">🏷 ${m.f === me ? 'Kamu menandai @' + esc(o) + ' di status' : '@' + esc(m.f) + ' menandai kamu di status'}<br><span class="go">${st ? 'Ketuk untuk melihat status' : 'Status sudah tidak tersedia'}</span></div>`; }
-  if(m.o) return m.f === me ? '<div class="ot">👁 Foto 1x lihat · terkirim</div>' : (m.ov || []).includes(me) || (!id && !m.src) ? '<div class="ot">👁 Foto sudah dibuka</div>' : '<div class="ot" data-ot="1">👁 Ketuk untuk lihat sekali</div>';
-  if(!m.media && !id && !m.src) return '';
-  const u = m.src || m.media || urls.get(id) || '', d = id ? ` data-mid="${id}"` : '', sa = u ? ` src="${u}"` : '';
-  if(m.mt === 'v') return `<div class="vt" data-i="${i}"><video${d}${u ? ` src="${u}#t=0.1"` : ''} preload="metadata" muted playsinline></video><span>▶</span></div>`;
+  const id = m.mid, u = m.src || urls.get(id) || '', d = id ? ` data-mid="${id}"` : '', sa = u ? ` src="${u}"` : '';
+  if(m.mt === 'v') return `<div class="vt" data-i="${i}"><video${d}${u ? ` src="${u}#t=0.1"` : ''} preload="metadata" muted></video><span>▶</span></div>`;
   if(m.mt === 'a') return `<div class="au">🎵 <b>${esc(m.fn || 'Musik')}</b></div><audio controls preload="metadata" data-i="${i}"${d}${sa}></audio>`;
-  if(m.mt === 'f') return `<a class="fl"${d} href="${u || '#'}" download="${esc(m.fn || 'file')}">📄<span><b>${esc(m.fn || 'File')}</b><em>${fsz(m.fs)} · ketuk untuk unduh</em></span></a>`;
+  if(m.mt === 'f') return `<a class="fl"${d} href="${u || '#'}" download="${esc(m.fn || 'file')}">📄 <b>${esc(m.fn || 'File')}</b></a>`;
   return `<img class="im" data-i="${i}"${d}${u ? sa : ' src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="'}>`;
 }
 
-let mvOpen = false, mvPushed = false, once = null;
+let mvOpen = false;
 async function openMv(i) {
-  const m = db.chats[cur].msgs[i]; if(!m || m.x || (!m.media && !m.mid && !m.src)) return;
-  const u = m.src || m.media || await murl(m.mid); if(!u) return toast('Media tidak ditemukan di perangkat ini');
-  $('#mvt').textContent = m.f === me ? 'Kamu' : '@' + m.f; { const d = $('#mvd'); d.href = u; d.download = m.fn || 'media'; }
-  $('#mvc').innerHTML = m.mt === 'v' ? `<video src="${u}" controls autoplay playsinline></video>` : `<img src="${u}">`;
-  $('#mv').hidden = false; mvOpen = true; try { history.pushState({ mv: 1 }, ''); mvPushed = true; } catch(e) {}
+  const m = db.chats[cur].msgs[i]; if(!m || m.x || (!m.mid && !m.src)) return;
+  const u = m.src || await murl(m.mid); if(!u) return toast('Media tidak ditemukan');
+  $('#mvt').textContent = '@' + m.f; $('#mvd').href = u; $('#mvc').innerHTML = m.mt === 'v' ? `<video src="${u}" controls autoplay></video>` : `<img src="${u}">`;
+  $('#mv').hidden = false; mvOpen = true;
+}
+function stopMedia() { document.querySelectorAll('audio,video').forEach(m => { try { m.pause(); } catch(e) {} }); $('#mv').hidden = true; mvOpen = false; }
+$('#mvb').onclick = stopMedia;
+
+function botWelcome() { if(me === BOT) return; load(); const id = 'p:' + [me, BOT].sort().join(':'); if(db.chats[id]) return; db.chats[id] = { id, type: 'p', members: [me, BOT], msgs: [{ f: BOT, t: Date.now(), r: [], text: 'Halo! Kirimkan link media sosial untuk mendownload.' }], created: Date.now() }; save(); }
+
+function privMenuWA() {
+  const d = document.createElement('div'); d.className = 'ov'; d.style.zIndex = 110;
+  d.innerHTML = `<div class="md">
+    <h3>Privasi Akun</h3>
+    <div class="prv-item"><div class="t"><b>Terakhir Dilihat</b></div></div>
+    <div class="prv-item"><div class="t"><b>Foto Profil</b></div></div>
+    <button class="btn-auth" id="pvx" style="margin-top:10px;">Selesai</button>
+  </div>`;
+  document.body.appendChild(d);
+  $('#pvx').onclick = () => d.remove();
 }
 
-function closeMv(pop) {
-  if(!mvOpen) return; if(once) { const o = once; once = null; burn(o); }
-  mvOpen = false; $('#mv').hidden = true; const v = $('#mvc video'); if(v) v.pause(); setTimeout(() => { if(!mvOpen) $('#mvc').innerHTML = ''; }, 260);
-  if(pop) mvPushed = false; else if(mvPushed) { mvPushed = false; try { history.back(); } catch(e) {} }
-}
-function stopMedia() { document.querySelectorAll('audio,video').forEach(m => { try { m.pause(); } catch(e) {} }); closeMv(); }
-$('#mvb').onclick = () => closeMv();
-addEventListener('popstate', () => closeMv(true));
-
-/* BOT DOWNLOADER & AI */
-const HELP = 'Halo! 👋 Saya bot downloader.\nKirim link TikTok, Instagram Reels, atau YouTube, nanti saya unduhkan otomatis.\nTambahkan kata "mp3" di pesan untuk ambil audionya saja.\nKetik /bantuan untuk melihat pesan ini lagi.';
-const RX_TT = /https?:\/\/(?:[\w-]+\.)?tiktok\.com\/\S+/i, RX_YT = /https?:\/\/(?:(?:www|m|music)\.)?(?:youtube\.com\/(?:watch|shorts|live)\S*|youtu\.be\/\S+)/i, RX_IG = /https?:\/\/(?:www\.)?instagram\.com\/(?:reel|reels|p)\/[\w-]+\/?/i;
-const wait = ms => new Promise(r => setTimeout(r, ms));
-function botWelcome() { if(me === BOT) return; load(); const id = 'p:' + [me, BOT].sort().join(':'); if(db.chats[id]) return; db.chats[id] = { id, type: 'p', members: [me, BOT], msgs: [{ f: BOT, t: Date.now(), r: [], text: HELP }], created: Date.now() }; save(); }
-function botPatch(cid, f) { load(); const c = db.chats[cid]; if(!c) return; f(c); save(); if(me && cur === cid) renderChat(); if(me) renderSide(); }
-function botSay(cid, m) { const bid = code() + code(); botPatch(cid, c => c.msgs.push({ f: BOT, t: Date.now(), r: [], bid, ...m })); return bid; }
-function botEdit(cid, bid, m) { botPatch(cid, c => { const x = c.msgs.find(z => z.bid === bid); if(x) Object.assign(x, m); }); }
-
-async function ttGet(url) {
-  const r = await fetch('https://www.tikwm.com/api/?hd=1&url=' + encodeURIComponent(url)), j = await r.json();
-  if(!j || j.code !== 0 || !j.data) throw new Error((j && j.msg) || 'Video tidak ditemukan');
-  const d = j.data, abs = u => u ? (/^https?:/.test(u) ? u : 'https://www.tikwm.com' + u) : '';
-  return { title: d.title || '', author: (d.author && d.author.unique_id) || '', video: abs(d.hdplay || d.play), music: abs(d.music), images: (d.images || []).slice(0, 6) };
-}
-
-async function ytGet(url, audio) {
-  const cf = db.botcfg || {}; if(!cf.api) throw new Error('NOCFG');
-  const h = { Accept: 'application/json', 'Content-Type': 'application/json' }; if(cf.key) h.Authorization = 'Api-Key ' + cf.key;
-  const r = await fetch(cf.api, { method: 'POST', headers: h, body: JSON.stringify({ url, videoQuality: '720', downloadMode: audio ? 'audio' : 'auto', audioFormat: 'mp3' }) }), j = await r.json();
-  if(j.status === 'error') throw new Error((j.error && j.error.code) || 'Gagal memproses');
-  if(j.url) return { url: j.url, fn: j.filename };
-  if(j.status === 'picker' && j.picker && j.picker[0]) return { url: j.picker[0].url };
-  throw new Error('Respons API tidak dikenali');
-}
-
-async function igGet(url) {
-  const r = await fetch('https://api.vkrdown.com/v4/media?url=' + encodeURIComponent(url)), j = await r.json();
-  if(!j || !j.data || !j.data.media) throw new Error('Gagal mengunduh Reels Instagram');
-  const v = j.data.media.find(m => m.type === 'video') || j.data.media[0];
-  return { url: v.url, title: j.data.title || 'Instagram Reels' };
-}
-
-async function grab(u, mt, fn) {
-  try { const r = await fetch(u); if(!r.ok) throw 0; const b = await r.blob(); const mid = await mput(b); urls.set(mid, URL.createObjectURL(b)); return { mid, mt, fn, fs: b.size }; }
-  catch(e) { return { media: u, mt, fn, fs: 0 }; }
-}
-
-function botWatch(cid, msg) {
-  const c = db.chats[cid]; if(!c || BOTS.includes(msg.f) || msg.f === '!' || !msg.text) return;
-  if(c.members.includes(BOT)) { botHandle(cid, msg).catch(() => {}); return; }
-  const b = c.type === 'p' && ['botai', 'botcs'].find(x => c.members.includes(x)); if(!b) return;
-  setTimeout(() => { botPatch(cid, cc => { const r = b === 'botai' ? aiReply(cc, msg.text) : csReply(msg); cc.msgs.push({ f: b, t: Date.now(), r: [], text: r }); }); }, 500 + Math.random() * 700);
-}
-
-async function botHandle(cid, msg) {
-  const c = db.chats[cid], t = msg.text, tk = t.match(RX_TT), yt = t.match(RX_YT), ig = t.match(RX_IG);
-  await wait(400);
-  botPatch(cid, c => { const m = c.msgs.find(x => x.t === msg.t && x.f === msg.f); if(m && !(m.r = m.r || []).includes(BOT)) m.r.push(BOT); });
-  if(!tk && !yt && !ig) { if(c.type === 'p') botSay(cid, { text: HELP }); return; }
-  const url = (tk || yt || ig)[0].replace(/[).,!?]+$/, ''), audio = /\b(mp3|audio|musik|lagu)\b/i.test(t.replace(url, '')), name = tk ? 'TikTok' : yt ? 'YouTube' : 'Instagram';
-  const bid = botSay(cid, { text: '⏳ Mengunduh ' + name + (audio ? ' (audio)' : '') + '…' });
-  try {
-    if(tk) {
-      const d = await ttGet(url), cap = '🎬 ' + (d.title || 'TikTok') + (d.author ? '\n👤 @' + d.author : ''), base = 'tiktok_' + (d.author || 'video');
-      if(audio) { if(!d.music) throw new Error('Audio tidak tersedia'); botEdit(cid, bid, { text: cap, ...await grab(d.music, 'a', base + '.mp3') }); }
-      else if(d.video) botEdit(cid, bid, { text: cap, ...await grab(d.video, 'v', base + '.mp4') });
-      else if(d.images.length) {
-        botEdit(cid, bid, { text: cap, ...await grab(d.images[0], 'i', base + '_1.jpg') });
-        for(let i = 1; i < d.images.length; i++) botSay(cid, await grab(d.images[i], 'i', base + '_' + (i + 1) + '.jpg'));
-      } else throw new Error('Media tidak ditemukan');
-    } else if(ig) {
-      const d = await igGet(url);
-      botEdit(cid, bid, { text: '📸 IG Reels: ' + (d.title || ''), ...await grab(d.url, audio ? 'a' : 'v', 'instagram.' + (audio ? 'mp3' : 'mp4')) });
-    } else {
-      const d = await ytGet(url, audio);
-      botEdit(cid, bid, { text: '▶️ YouTube', ...await grab(d.url, audio ? 'a' : 'v', d.fn || 'youtube.' + (audio ? 'mp3' : 'mp4')) });
-    }
-  } catch(e) {
-    const m = String(e && e.message || e);
-    botEdit(cid, bid, { text: m === 'NOCFG' ? '⚠️ Unduhan YouTube belum diaktifkan. Pemilik bot perlu login sebagai @' + BOT + ' → tab Akun → isi endpoint API.' : /fetch|network|load/i.test(m) ? '❌ Gagal menghubungi layanan unduhan. Coba lagi nanti.' : '❌ Gagal mengunduh: ' + m });
-  }
-}
-
-function solveLesson(input) {
-  const s = input.toLowerCase();
-  try {
-    if(/^[0-9+\-*/().\s^%]+$/.test(input.replace(/[a-zA-Z]/g,'').trim()) && /[\d]/.test(input)) {
-      const expr = input.replace(/x/g, '*').replace(/\^/g, '**');
-      const res = Function('"use strict";return (' + expr + ')')();
-      if(typeof res === 'number' && !isNaN(res)) return `🧮 **Hasil Matematika:**\n${input} = **${res}**`;
-    }
-  } catch(e) {}
-
-  if(s.includes('sejarah') || s.includes('proklamasi') || s.includes('perang')) return "📚 **Jawaban Sejarah:**\nProklamasi Kemerdekaan Indonesia dilaksanakan pada 17 Agustus 1945 oleh Soekarno-Hatta di Jalan Pegangsaan Timur No. 56, Jakarta.";
-  if(s.includes('fotosintesis') || s.includes('biologi') || s.includes('sel')) return "🌿 **Jawaban Biologi:**\nFotosintesis adalah proses pembuat makanan oleh tumbuhan hijau menggunakan cahaya matahari, air ($H_2O$), dan karbon dioksida ($CO_2$), menghasilkan glukosa ($C_6H_{12}O_6$) serta oksigen ($O_2$).";
-  if(s.includes('gravitasi') || s.includes('ipa') || s.includes('fisika') || s.includes('kimia')) return "⚛️ **Jawaban IPA / Fisika:**\nHukum Gravitasi Newton menyatakan bahwa setiap dua benda bermassa akan tarik-menarik ($F = G \\frac{m_1 m_2}{r^2}$).";
-  return null;
-}
-
-function aiReply(c, t) {
-  const s = t.trim().toLowerCase(), modes = { '/sopan': 1, '/toxic': 1, '/ramah': 1, '/jahat': 1 };
-  const pick = a => a[Math.floor(Math.random() * a.length)];
-  
-  if(modes[s]) {
-    c.ai = s.slice(1);
-    return {
-      sopan: '🙏 Mode Sangat Sopan aktif. Ada yang bisa hamba bantu untuk Anda hari ini?',
-      toxic: '🤬 Mode TOXIC SUPER AKTIF! Mau ngomong apa lo anjing, kontol, memek, jembut?! Gak usah sok asik goblok!',
-      ramah: '😊 Mode ramah aktif. Yuk ngobrol santai!',
-      jahat: '😈 Mode jahat aktif. Siap-siap sakit hati ya.'
-    }[c.ai];
-  }
-
-  const currentMode = c.ai || 'sopan', lessonAns = solveLesson(t);
-  if(lessonAns) {
-    if(currentMode === 'toxic') return `Nih jawaban soal lu, dasar goblok tolol babu anjing:\n${lessonAns}\n\nLain kali mikir sendiri, jangan nyusahin orang kontol!`;
-    if(currentMode === 'sopan') return `Tentu, dengan senang hati hamba bantu selesaikan pertanyaan Anda:\n\n${lessonAns}\n\nSemoga membantu pembelajaran Anda.`;
-    return lessonAns;
-  }
-
-  if(s.includes('curhat') || s.includes('mau cerita')) {
-    if(currentMode === 'sopan') return "Tentu, hamba dengan senang hati siap mendengarkan seluruh keluh kesah Anda. Silakan ceritakan...";
-    if(currentMode === 'toxic') return "Mau curhat? Halah kontol, drama amat hidup lo anjing! Sini cerita cepetan jembut!";
-    return "Mau curhat? Sini aku dengerin! Ada masalah apa? Cerita aja semuanya...";
-  }
-
-  if(s.includes('sedih') || s.includes('kecewa') || s.includes('nangis')) {
-    if(currentMode === 'sopan') return "Turut prihatin mendengar hal tersebut. Jangan menyerah ya, hamba selalu ada untuk mendampingi Anda.";
-    if(currentMode === 'toxic') return "Sedih mulu lo memek! Lemah banget jadi orang anjing, mending lo tidur sana tolol!";
-    return "Jangan sedih ya... Aku paham perasaan kamu. Semua pasti ada jalan keluar nya, semangat!";
-  }
-
-  if(currentMode === 'toxic') return pick(["Ngomong apa sih lo anjing? Muka lo kek memek busuk!", "Gak usah banyak bacot kontol, urusin hidup lo yang hancur itu dulu tolol!", "Woy jembut! Nanya mulu lo kek orang gak punya otak anjing!"]);
-  if(currentMode === 'sopan') return pick(["Sungguh ucapan yang sangat indah. Apakah ada hal lain yang bisa hamba bantu?", "Mohon maaf apabila hamba kurang memahami, dapatkah Anda jelaskan kembali dengan lembut?"]);
-  return "Aku dengerin kok! Gimana lagi kelanjutannya? Mau bahas apa lagi nih?";
-}
-
-function csReply(m) {
-  const s = m.text.trim(), l = s.toLowerCase();
-  if(l.startsWith('/owner')) {
-    const id = 'p:' + [m.f, 'riyan'].sort().join(':');
-    if(!db.chats[id]) db.chats[id] = { id, type: 'p', members: [m.f, 'riyan'], msgs: [], created: Date.now() };
-    db.chats[id].msgs.push({ f: m.f, t: Date.now(), r: [m.f], text: '🎧 Support: ' + (s.slice(6).trim() || 'Butuh bantuan') });
-    return '✅ Pesan diteruskan ke owner chme/@riyan. Tunggu balasannya di chat itu.';
-  }
-  if(/(ban|blokir|bekuk|beku)/.test(l)) return 'Akun bisa dibanned/dibekukan oleh owner. Untuk banding ketik: /owner <alasan kamu>';
-  if(/(lupa|password|sandi)/.test(l)) return 'Password tidak bisa dilihat. Hubungi owner: /owner lupa password saya';
-  if(/(grup|group|link|undang)/.test(l)) return 'Buat grup lewat ⋮ > Grup baru. Link undangan berbentuk chme.group/kode.';
-  if(/(download|unduh|tiktok|youtube|instagram|reels)/.test(l)) return 'Kirim link TikTok/YouTube/Instagram Reels ke @botdownload, nanti diunduhkan otomatis.';
-  return '🎧 Halo, aku customer service Hitler. Ketik:\n/owner <pesan> untuk bicara ke owner chme/@riyan, atau tanya soal: ban, password, grup, download, centang.';
-}
-
-function editImg(f, o = {}) {
-  return new Promise(res => {
-    const im = new Image(), u0 = URL.createObjectURL(f);
-    im.onerror = () => { URL.revokeObjectURL(u0); toast('Foto tidak bisa dibuka'); res(null); };
-    im.onload = () => {
-      const d = document.createElement('div'); d.className = 'ov'; d.style.zIndex = 100;
-      d.innerHTML = `<div class="md" style="max-width:360px;max-height:92vh;overflow:auto;text-align:center"><h3>${o.title || 'Atur foto'}</h3><canvas id="ec" width="300" height="300" style="width:100%;max-width:300px;touch-action:none;border-radius:${o.circle ? '50%' : '12px'}"></canvas>${o.crop ? '<br><label><input type="checkbox" id="es"> ✂ Potong persegi (geser & zoom)</label>' : ''}${o.crop || o.circle ? '<br><label>Zoom</label><input type="range" id="ez" min="1" max="4" step="0.01" value="1">' : ''}${o.q ? '<br><label>Kualitas</label><select class="f" id="eq"><option value="240">240p</option><option value="360">360p</option><option value="720" selected>720p</option><option value="1440">1440p</option><option value="0">Asli</option></select>' : ''}<button class="btn" id="eo">${o.ok || 'Pakai'}</button><button class="btn" id="ex" style="background:var(--line);color:var(--txt);margin-top:8px">Batal</button></div>`;
-      document.body.appendChild(d);
-      const c = d.querySelector('#ec'), g = c.getContext('2d'), W = 300, q = x => d.querySelector(x);
-      let z = 1, ox = 0, oy = 0, sq = !!o.circle;
-      const sc = () => sq ? Math.max(W / im.width, W / im.height) * z : Math.min(W / im.width, W / im.height);
-      function draw() {
-        const s = sc(), w = im.width * s, h = im.height * s;
-        if(sq) { const mx = (w - W) / 2, my = (h - W) / 2; ox = Math.max(-mx, Math.min(mx, ox)); oy = Math.max(-my, Math.min(my, oy)); } else ox = oy = 0;
-        g.fillStyle = '#000'; g.fillRect(0, 0, W, W); g.drawImage(im, (W - w) / 2 + ox, (W - h) / 2 + oy, w, h);
-      }
-      let px = null, py = 0;
-      c.onpointerdown = e => { px = e.clientX; py = e.clientY; c.setPointerCapture(e.pointerId); };
-      c.onpointermove = e => { if(px === null || !sq) return; const k = W / c.clientWidth; ox += (e.clientX - px) * k; oy += (e.clientY - py) * k; px = e.clientX; py = e.clientY; draw(); };
-      c.onpointerup = () => px = null;
-      if(q('#ez')) q('#ez').oninput = e => { z = +e.target.value; draw(); };
-      if(q('#es')) q('#es').onchange = e => { sq = e.target.checked; z = 1; ox = oy = 0; draw(); };
-      const end = v => { d.remove(); URL.revokeObjectURL(u0); res(v); };
-      q('#ex').onclick = () => end(null);
-      q('#eo').onclick = () => {
-        const Q = +(q('#eq') ? q('#eq').value : o.out || 0), s = sc(), oc = document.createElement('canvas'), x = oc.getContext('2d');
-        if(sq) { const side = Q ? Math.min(Q, Math.round(W / s)) : Math.round(W / s), sx = -((W - im.width * s) / 2 + ox) / s, sy = -((W - im.height * s) / 2 + oy) / s; oc.width = oc.height = side; x.drawImage(im, sx, sy, W / s, W / s, 0, 0, side, side); }
-        else { const k = Q ? Math.min(1, Q / Math.max(im.width, im.height)) : 1; oc.width = Math.round(im.width * k); oc.height = Math.round(im.height * k); x.drawImage(im, 0, 0, oc.width, oc.height); }
-        oc.toBlob(b => end(b), 'image/jpeg', Q >= 1440 || !Q ? .95 : .88);
-      };
-      draw();
-    }; im.src = u0;
-  });
-}
-
-async function openOnce(i) {
-  const m = db.chats[cur].msgs[i];
-  if(!m || m.f === me || (m.ov || []).includes(me) || (!m.mid && !m.src)) return;
-  const u = m.src || await murl(m.mid); if(!u) return toast('Media tidak tersedia di perangkat ini');
-  $('#mvt').textContent = '👁 Sekali lihat · @' + m.f;
-  $('#mvc').innerHTML = `<img src="${u}" draggable="false" oncontextmenu="return false" style="pointer-events:none;-webkit-user-select:none;-webkit-touch-callout:none">`;
-  $('#mv').hidden = false; mvOpen = true; once = { c: cur, i };
-  try { history.pushState({ mv: 1 }, ''); mvPushed = true; } catch(e) {}
-}
-
-function burn(o) {
-  load(); const c = db.chats[o.c], m = c && c.msgs[o.i]; if(!m) return;
-  (m.ov = m.ov || []).push(me);
-  if(c.members.filter(x => x !== m.f).every(x => m.ov.includes(x)) && m.mid) { mdel(m.mid); urls.delete(m.mid); m.mid = null; m.src = null; }
-  save(); if(cur) renderChat();
-}
-document.addEventListener('visibilitychange', () => { if(document.hidden && once) closeMv(); });
-
-async function dlMsg(i) {
-  const m = db.chats[cur].msgs[i], u = m.src || m.media || await murl(m.mid); if(!u) return toast('Media tidak ditemukan');
-  const a = document.createElement('a'); a.href = u; a.download = m.fn || ('media-' + m.t);
-  document.body.appendChild(a); a.click(); a.remove();
-}
-
-function openUser(u) {
-  load(); if(!db.users[u]) return toast('User @' + u + ' tidak ditemukan');
-  const id = 'p:' + [me, u].sort().join(':');
-  if(!db.chats[id]) { db.chats[id] = { id, type: 'p', members: [me, u], msgs: [], created: Date.now() }; save(); }
-  openChat(id);
-}
-
-async function grpAct(a, u) {
-  load(); const c = db.chats[cur]; if(!isAdm(c, me)) return; c.admins = c.admins || [c.members[0]];
-  const S = t => c.msgs.push({ f: '!', t: Date.now(), text: t });
-  if(a === 'kick') { if(!await ask('Keluarkan @' + u + ' dari grup?', { ok: 'Kick' })) return; c.members = c.members.filter(x => x !== u); c.admins = c.admins.filter(x => x !== u); S('@' + u + ' dikeluarkan oleh @' + me); }
-  else if(c.admins.includes(u)) { c.admins = c.admins.filter(x => x !== u); S('@' + u + ' bukan admin lagi'); }
-  else { c.admins.push(u); S('@' + u + ' dijadikan admin'); }
-  save(); ginfo(); renderChat(); renderSide();
-}
-
-$('#gr').onclick = async () => {
-  if(!await ask('Reset link? Link lama tidak berlaku lagi.', { ok: 'Reset' })) return;
-  load(); const c = db.chats[cur]; if(!isAdm(c, me)) return; c.code = gcode(); save(); ginfo(); toast('Link direset');
-};
-
-/* PANEL OWNER */
 function ownerPanel() {
   if(me !== 'riyan') return;
   const d = document.createElement('div'); d.className = 'ov'; d.style.zIndex = 120;
-  const R = () => {
-    load(); const usersList = Object.keys(db.users).filter(u => u !== me && !BOTS.includes(u));
-    d.innerHTML = `<div class="md" style="max-width:440px;max-height:90vh;overflow:auto">
-      <h3 style="display:flex;align-items:center;gap:8px">🛡️ Panel Owner</h3>
-      ${usersList.map(u => {
-        const x = db.users[u];
-        return `<div class="owner-user-card">
-          <div class="hdr"><b>@${esc(u)}${vb(u)}</b><small style="color:var(--sub)">${x.ban ? '🚫 Banned' : x.frz > Date.now() ? '❄️ Beku' : ''}</small></div>
-          <div style="font-size:12px;color:var(--sub);margin-bottom:6px">${esc(x.email)}</div>
-          <div class="owner-btn-grid">
-            <button class="chip" data-a="resetpw" data-u="${u}">🔑 Reset PW</button>
-            <button class="chip" data-a="frz" data-u="${u}">❄️ Bekukan</button>
-            <button class="chip" data-a="badge" data-u="${u}">✔ Centang</button>
-            <button class="chip" data-a="ban" data-u="${u}" style="color:${x.ban ? 'var(--green)' : '#f5b301'}">${x.ban ? 'Unban' : '🚫 Ban'}</button>
-          </div>
-          <button class="chip" data-a="delacc" data-u="${u}" style="width:100%;margin-top:6px;background:#e5484d;color:#fff;border-color:transparent">🗑️ Hapus Akun</button>
-        </div>`;
-      }).join('') || '<div class="empty">Belum ada user terdaftar</div>'}
-      <button class="btn" id="oxx" style="margin-top:10px">Tutup Panel</button>
-    </div>`;
-  };
-  R(); document.body.appendChild(d);
-
-  d.onclick = async e => {
-    if(e.target === d || e.target.id === 'oxx') return d.remove();
-    const b = e.target.closest('[data-a]'); if(!b) return;
-    const u = b.dataset.u, act = b.dataset.a; load(); const x = db.users[u];
-
-    if(act === 'delacc') {
-      if(!await ask('Yakin hapus akun @' + u + ' secara permanen?', { ok: 'Hapus Permanen' })) return;
-      delete db.users[u]; delete db.pres[u];
-      Object.keys(db.chats).forEach(cid => {
-        const c = db.chats[cid];
-        if(c.members.includes(u)) {
-          if(c.type === 'p') delete db.chats[cid];
-          else { c.members = c.members.filter(m => m !== u); c.admins = (c.admins || []).filter(m => m !== u); }
-        }
-      });
-      db.status = db.status.filter(s => s.u !== u); save(); toast('Akun @' + u + ' berhasil dihapus'); R(); renderSide();
-    } else if(act === 'resetpw') {
-      const newpass = await ask('Masukkan password baru untuk @' + u, { input: 1, ok: 'Ganti' });
-      if(!newpass || newpass.length < 6) return toast('Password min. 6 karakter');
-      x.pass = await hash(newpass); save(); toast('Password @' + u + ' berhasil diubah!');
-    } else if(act === 'ban') {
-      x.ban = !x.ban; save(); R();
-    } else if(act === 'frz') {
-      if(x.frz > Date.now()) { delete x.frz; toast('Sanksi bekukan dicairkan'); }
-      else {
-        const modal = document.createElement('div'); modal.className = 'ov'; modal.style.zIndex = 130;
-        modal.innerHTML = `<div class="md">
-          <h3>Bekukan @${esc(u)}</h3>
-          <input class="f" id="fzval" type="number" placeholder="Jumlah durasi" value="10">
-          <select class="f" id="fzunit"><option value="s">Detik</option><option value="m">Menit</option><option value="h" selected>Jam</option><option value="d">Hari</option><option value="y">Tahun</option></select>
-          <button class="btn" id="fzg">Terapkan Bekukan</button>
-          <button class="btn" id="fzx" style="background:var(--line);color:var(--txt);margin-top:6px">Batal</button>
-        </div>`;
-        document.body.appendChild(modal);
-        modal.querySelector('#fzx').onclick = () => modal.remove();
-        modal.querySelector('#fzg').onclick = () => {
-          const val = +modal.querySelector('#fzval').value || 1, unit = modal.querySelector('#fzunit').value;
-          const msMap = { s: 1000, m: 60000, h: 3600000, d: 86400000, y: 31536000000 };
-          x.frz = Date.now() + (val * msMap[unit]); save(); modal.remove(); toast('Akun dibekukan!'); R();
-        };
-      }
-    } else if(act === 'badge') {
-      const modal = document.createElement('div'); modal.className = 'ov'; modal.style.zIndex = 130;
-      modal.innerHTML = `<div class="md">
-        <h3>Atur Centang @${esc(u)}</h3>
-        <button class="chip" style="width:100%;margin-bottom:6px;background:#1d9bf0;color:#fff" data-c="blue">✔ Centang Biru</button>
-        <button class="chip" style="width:100%;margin-bottom:6px;background:#e5484d;color:#fff" data-c="red">✔ Centang Merah</button>
-        <button class="chip" style="width:100%;margin-bottom:6px;background:#f5b301;color:#fff" data-c="yellow">✔ Centang Kuning</button>
-        <button class="chip" style="width:100%;margin-bottom:12px;background:#555;color:#fff" data-c="del">🗑 Hapus Centang</button>
-        <button class="btn" id="bgx" style="background:var(--line);color:var(--txt)">Batal</button>
-      </div>`;
-      document.body.appendChild(modal);
-      modal.querySelector('#bgx').onclick = () => modal.remove();
-      modal.onclick = e_b => {
-        const btn = e_b.target.closest('[data-c]'); if(!btn) return;
-        const color = btn.dataset.c;
-        if(color === 'del') delete x.badge; else x.badge = color;
-        save(); modal.remove(); toast('Centang diperbarui'); R();
-      };
-    }
-  };
-}
-
-/* PRIVASI WA */
-function privMenuWA() {
-  const d = document.createElement('div'); d.className = 'ov'; d.style.zIndex = 110;
-  const labelMap = { all: 'Semua orang', except: 'Semua kecuali...', only: 'Hanya bagikan dengan...', nobody: 'Tidak ada' };
-  
-  const R = () => {
-    load(); const p = db.users[me].priv || {}; const getL = k => labelMap[(p[k] || {}).mode || 'all'];
-    d.innerHTML = `<div class="md" style="max-width:400px;max-height:90vh;overflow:auto;padding:16px 12px">
-      <h3 style="padding:0 4px 6px">Privasi</h3>
-      <small style="padding:0 4px;color:var(--sub);display:block;margin-bottom:12px">Siapa yang dapat melihat informasi pribadi saya</small>
-      <div class="prv-item" data-k="online"><div class="t"><b>Terakhir dilihat dan online</b><small>${getL('online')}</small></div></div>
-      <div class="prv-item" data-k="pic"><div class="t"><b>Foto profil</b><small>${getL('pic')}</small></div></div>
-      <div class="prv-item" data-k="bio"><div class="t"><b>Tentang (Bio)</b><small>${getL('bio')}</small></div></div>
-      <div class="prv-item" data-k="status"><div class="t"><b>Status</b><small>${getL('status')}</small></div></div>
-      <div class="prv-item" style="cursor:default">
-        <div class="t" style="padding-right:10px"><b>Laporan dibaca</b><small>Jika dinonaktifkan, Anda tidak akan mengirim atau menerima Laporan dibaca.</small></div>
-        <label class="switch-ui"><input type="checkbox" id="rr-toggle" ${p.readReceipts?.mode === 'nobody' ? '' : 'checked'}><span class="slider-ui"></span></label>
-      </div>
-      <button class="btn" id="pvx" style="margin-top:16px;background:var(--line);color:var(--txt)">Selesai</button>
-    </div>`;
-  };
-  R(); document.body.appendChild(d);
-
-  d.onclick = async e => {
-    if(e.target === d || e.target.id === 'pvx') { d.remove(); refreshAll(); return; }
-    if(e.target.id === 'rr-toggle') {
-      load(); db.users[me].priv = db.users[me].priv || {};
-      db.users[me].priv.readReceipts = { mode: e.target.checked ? 'all' : 'nobody' };
-      save(); return;
-    }
-    const item = e.target.closest('.prv-item'); if(!item || !item.dataset.k) return;
-    const key = item.dataset.k;
-
-    const modal = document.createElement('div'); modal.className = 'ov'; modal.style.zIndex = 120;
-    const curPriv = (db.users[me].priv || {})[key] || { mode: 'all', list: [] };
-
-    modal.innerHTML = `<div class="md" style="max-width:350px">
-      <h3>Pilih Privasi</h3>
-      <div class="opt-table">
-        <div class="opt-row ${curPriv.mode === 'all' ? 'on' : ''}" data-m="all"><span>Semua orang</span><div class="opt-radio"></div></div>
-        <div class="opt-row ${curPriv.mode === 'except' ? 'on' : ''}" data-m="except"><span>Semua orang kecuali…</span><div class="opt-radio"></div></div>
-        <div class="opt-row ${curPriv.mode === 'only' ? 'on' : ''}" data-m="only"><span>Hanya bagikan dengan…</span><div class="opt-radio"></div></div>
-        <div class="opt-row ${curPriv.mode === 'nobody' ? 'on' : ''}" data-m="nobody"><span>Tidak ada</span><div class="opt-radio"></div></div>
-      </div>
-      <button class="btn" id="clx" style="margin-top:8px;background:var(--line);color:var(--txt)">Batal</button>
-    </div>`;
-    document.body.appendChild(modal);
-    modal.querySelector('#clx').onclick = () => modal.remove();
-
-    modal.onclick = async e_opt => {
-      const opt = e_opt.target.closest('[data-m]'); if(!opt) return;
-      const mode = opt.dataset.m; load(); db.users[me].priv = db.users[me].priv || {};
-      if(mode === 'all' || mode === 'nobody') {
-        db.users[me].priv[key] = { mode, list: [] }; save(); modal.remove(); R();
-      } else {
-        const title = mode === 'except' ? 'Sembunyikan dari' : 'Bagikan hanya dengan';
-        const chosen = await pickUsers(title, curPriv.list || [], 'Simpan');
-        if(chosen !== null) { db.users[me].priv[key] = { mode, list: chosen }; save(); }
-        modal.remove(); R();
-      }
-    };
-  };
-}
-
-function sheet(title, btns) {
-  const d = document.createElement('div'); d.className = 'ov'; d.style.zIndex = 110;
-  d.innerHTML = `<div class="md" style="max-width:340px;padding:16px"><h3 style="margin:0 0 10px;text-align:left">${esc(title)}</h3>
-    <div class="shb-list">
-      ${btns.map((b, i) => `<button class="shb-item ${b.cls || ''}" data-i="${i}">${b.t}</button>`).join('')}
-      <button class="shb-item" data-i="x" style="justify-content:center;background:var(--line);color:var(--txt);margin-top:4px">Batal</button>
-    </div>
-  </div>`;
+  d.innerHTML = `<div class="md"><h3>🛡️ Panel Owner</h3><p style="font-size:13px;color:var(--sub)">Fitur Owner Aktif</p><button class="btn-auth" id="oxx">Tutup</button></div>`;
   document.body.appendChild(d);
-  d.onclick = e => {
-    const b = e.target.closest('[data-i]'); if(e.target !== d && !b) return;
-    d.remove(); if(b && b.dataset.i !== 'x') btns[+b.dataset.i].f();
-  };
+  $('#oxx').onclick = () => d.remove();
 }
 
 async function takeFile(inp) { const f = inp.files && inp.files[0]; if(!f) { inp.value = ''; return null; } inp.value = ''; return f; }
-const refreshAll = () => { renderSide(); if(cur && db.chats[cur]) renderChat(); };
-function showPic(src) { vs = []; vi = 0; $('#vw').innerHTML = `<img src="${src}" style="max-height:85%;border-radius:16px">`; $('#vw').hidden = false; }
+function profMenu() { $('#pf').click(); }
+$('#pf').onchange = async e => {
+  const f = await takeFile(e.target); if(!f) return;
+  const b = await b2d(f); load(); db.users[me].pic = b;
+  if(save()) { renderSide(); toast('Foto profil diperbarui'); }
+};
 
-function profMenu() {
-  load(); const u = db.users[me] || {}, o = [{ t: '📷 Pilih foto baru', f: () => $('#pf').click() }];
-  if(u.pic) { o.push({ t: '👁 Lihat foto profil', f: () => showPic(u.pic) }, { t: '🗑 Hapus foto profil', cls: 'dg', f: () => { load(); delete db.users[me].pic; if(save()) { refreshAll(); toast('Foto profil dihapus'); } } }); }
-  sheet('Foto profil', o);
-}
-
-const lsFmt = t => { const d = new Date(t), n = new Date(), y = new Date(n); y.setDate(n.getDate() - 1); const same = (a, b) => a.toDateString() === b.toDateString(); return same(d, n) ? 'hari ini ' + hm(t) : same(d, y) ? 'kemarin ' + hm(t) : d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) + ' ' + hm(t); };
+const lsFmt = t => new Date(t).toLocaleDateString('id-ID');
 const sidOf = s => s.id || s.u + '@' + s.t;
-function stvAllowed(o, v) { if(o === v) return true; const s = ((db.users[o] || {}).priv || {}).status || { mode: 'all' }, l = s.list || []; return s.mode === 'only' ? l.includes(v) : s.mode === 'except' ? !l.includes(v) : s.mode === 'nobody' ? false : true; }
-const canSeeS = (s, v = me) => stvAllowed(s.u, v) || (s.tags || []).includes(v);
-const visS = u => db.status.filter(s => s.u === u && Date.now() - s.t < 864e5 && canSeeS(s));
-const tagInfo = s => { const t = s.tags || []; if(!t.length) return ''; if(s.u === me) return `<div class="stg">🏷 Ditandai: ${t.map(x => '@' + esc(x)).join(', ')}</div>`; return t.includes(me) ? '<div class="stg">🏷 Kamu ditandai di status ini</div>' : ''; };
-
-function pickUsers(title, preset, ok) {
-  return new Promise(res => {
-    load(); const d = document.createElement('div'); d.className = 'ov'; d.style.zIndex = 140; const sel = new Set(preset || []);
-    const all = Object.keys(db.users).filter(u => u !== me && !BOTS.includes(u)), near = [...new Set(myChats().filter(c => c.type === 'p').map(cname))].filter(u => all.includes(u));
-    const list = [...near, ...all.filter(u => !near.includes(u)).sort()];
-    d.innerHTML = `<div class="md pk"><h3>${esc(title)}</h3><input class="f" id="pks" placeholder="🔍 Cari username" autocomplete="off"><div class="pkl" id="pkl"></div><button class="btn" id="pko"></button><button class="btn" id="pkx" style="background:var(--line);color:var(--txt);margin-top:8px">Batal</button></div>`;
-    document.body.appendChild(d); const q = x => d.querySelector(x), cnt = () => { q('#pko').textContent = ok + ' (' + sel.size + ')'; };
-    const R = () => {
-      const t = q('#pks').value.trim().toLowerCase().replace('@',''), v = list.filter(u => u.includes(t));
-      q('#pkl').innerHTML = v.length ? v.map(u => `<label class="pkr">${av(u)}<b>@${esc(u)}</b><input type="checkbox" data-u="${esc(u)}" ${sel.has(u) ? 'checked' : ''}></label>`).join('') : '<div class="empty">Tidak ada pengguna lain</div>'; cnt();
-    };
-    q('#pks').oninput = R; q('#pkl').onchange = e => { const u = e.target.dataset.u; if(!u) return; e.target.checked ? sel.add(u) : sel.delete(u); cnt(); };
-    q('#pko').onclick = () => { d.remove(); res([...sel]); }; q('#pkx').onclick = () => { d.remove(); res(null); }; R();
-  });
-}
-
-function composeS(f, mt) {
-  return new Promise(res => {
-    const d = document.createElement('div'); d.className = 'ov'; d.style.zIndex = 110; let tags = []; const u0 = URL.createObjectURL(f);
-    d.innerHTML = `<div class="md" style="max-width:360px;max-height:92vh;overflow:auto"><h3>Status baru</h3><div class="csp">${mt === 'v' ? `<video src="${u0}#t=0.1" muted playsinline></video>` : `<img src="${u0}">`}</div><input class="f" id="csc" placeholder="Keterangan status (opsional)" maxlength="200" style="margin-top:10px"><button class="cb" id="cst"></button><button class="btn" id="cso">Posting</button><button class="btn" id="csx" style="background:var(--line);color:var(--txt);margin-top:8px">Batal</button></div>`;
-    document.body.appendChild(d); const q = x => d.querySelector(x);
-    const R = () => { load(); q('#cst').textContent = tags.length ? '🏷 ' + tags.length + ' orang ditandai · ubah' : '🏷 Tandai orang'; };
-    const fin = v => { d.remove(); URL.revokeObjectURL(u0); res(v); };
-    q('#cst').onclick = async () => { const r = await pickUsers('Tandai di status', tags, 'Tandai'); if(r) tags = r; R(); };
-    q('#cso').onclick = () => fin({ cap: q('#csc').value.trim(), tags }); q('#csx').onclick = () => fin(null); R();
-  });
-}
-
-function tagMsg(u, st) {
-  const id = 'p:' + [me, u].sort().join(':'); if(!db.chats[id]) db.chats[id] = { id, type: 'p', members: [me, u], msgs: [], created: Date.now() };
-  db.chats[id].msgs.push({ f: me, t: Date.now(), r: [], sm: 1, mt: 'sm', sid: st.id, text: '' });
-}
-
-async function openStatusById(id) {
-  load(); const s = db.status.find(x => sidOf(x) === id); if(!s || Date.now() - s.t >= 864e5) return toast('Status sudah tidak tersedia');
-  if(!canSeeS(s)) return toast('Status ini tidak tersedia untukmu');
-  vs = visS(s.u); vi = Math.max(0, vs.findIndex(x => sidOf(x) === id));
-  await Promise.all(vs.filter(x => x.mid).map(x => murl(x.mid))); showS();
-}
-
-function banner(text, fn) {
-  let b = $('#nb'); if(!b) { b = document.createElement('div'); b.id = 'nb'; document.body.appendChild(b); }
-  b.textContent = text; b.classList.add('on'); b.onclick = () => { b.classList.remove('on'); fn && fn(); };
-  clearTimeout(b._t); b._t = setTimeout(() => b.classList.remove('on'), 7000);
-}
-
-const notified = new Set();
-function scanTags(first) {
-  if(!me) return; let n = 0, last = null;
-  Object.values(db.chats).forEach(c => {
-    if(!c.members.includes(me)) return;
-    c.msgs.forEach(m => {
-      if(m.sm && m.f !== me && !(m.r || []).includes(me) && !(m.d || []).includes(me) && db.status.some(x => sidOf(x) === m.sid && Date.now() - x.t < 864e5)) {
-        const k = c.id + ':' + m.t; if(!notified.has(k)); n++; last = m;
-      }
-    });
-  });
-  if(!n) return;
-  const t = first && n > 1 ? '🏷 Kamu ditandai di ' + n + ' status' : '🏷 @' + last.f + ' menandai kamu di status';
-  banner(t + ' · ketuk untuk melihat', () => { if(n > 1 && first) { tab = 'status'; renderSide(); } else openStatusById(last.sid); });
-  try { if(window.Notification && Notification.permission === 'granted' && document.hidden) new Notification('Hitler', { body: t }); } catch(e) {}
-}
+function stvAllowed(o, v) { return true; }
+const canSeeS = (s, v = me) => true;
+const visS = u => db.status.filter(s => s.u === u && Date.now() - s.t < 864e5);
+function scanTags() {}
+function prep(f) { return new Promise(ok => { const r = new FileReader(); r.onload = () => ok({ src: r.result }); r.readAsDataURL(f); }); }
 
 document.addEventListener('DOMContentLoaded', () => {
   load();
   initAuthHandlers();
-  
-  let pend = (location.hash.match(/join=(\w+)/) || [])[1] || null;
   let s0 = null;
   try { s0 = localStorage.getItem('chatku_me'); } catch(e) {}
   if(s0 && db.users[s0]) start(s0);
 });
-
-addEventListener('storage', e => { if(e.key === 'chatku_db' && me) { load(); scanTags(false); renderSide(); renderChat(); } });
-try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch(e) {}
-setInterval(() => { if(me && tab !== 'acct') { load(); renderSide(); } }, 60000);
 </script>
 </body>
 </html>
+
