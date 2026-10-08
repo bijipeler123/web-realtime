@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aplikasi Realtime Pertama Saya</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; text-align: center; }
+    input { padding: 10px; width: 80%; margin-bottom: 10px; font-size: 16px; }
+    button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; font-size: 16px; }
+    .box { margin-top: 20px; padding: 15px; border: 1px solid #ddd; background: #f9f9f9; border-radius: 8px; }
+  </style>
+</head>
+<body>
+
+  <h2>Aplikasi Catatan Realtime</h2>
+  <input type="text" id="teksInput" placeholder="Tulis sesuatu di sini...">
+  <br>
+  <button onclick="kirimData()">Kirim Ke Semua Device</button>
+
+  <div class="box">
+    <h3>Data Saat Ini:</h3>
+    <h2 id="hasilTeks" style="color: #28a745;">Loading...</h2>
+  </div>
+
+  <!-- Library Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+  <script>
+    // Konfigurasi Firebase milikmu
+    const firebaseConfig = {
+      apiKey: "AIzaSyBGG2Olyw_S8LkLrydjszhlLPrVryafwUU",
+      authDomain: "hitlerapp.firebaseapp.com",
+      databaseURL: "https://hitlerapp-default-rtdb.firebaseio.com",
+      projectId: "hitlerapp",
+      storageBucket: "hitlerapp.firebasestorage.app",
+      messagingSenderId: "644338912723",
+      appId: "1:644338912723:web:2f35473aa080819a77f326",
+      measurementId: "G-4GDLP38GR5"
+    };
+
+    // Inisialisasi Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Fungsi Mengirim Data
+    function kirimData() {
+      const isiTeks = document.getElementById('teksInput').value;
+      if (isiTeks !== "") {
+        db.ref('catatan_bersama').set(isiTeks);
+        document.getElementById('teksInput').value = "";
+      }
+    }
+
+    // Pendengar Real-time
+    db.ref('catatan_bersama').on('value', (snapshot) => {
+      const dataTerbaru = snapshot.val();
+      document.getElementById('hasilTeks').innerText = dataTerbaru || "Belum ada data";
+    });
+  </script>
+
+</body>
+</html>
