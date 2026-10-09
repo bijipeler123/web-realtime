@@ -242,6 +242,45 @@ input, textarea, select { font: inherit; color: inherit; }
 .st-au b { font-size: 14px; max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .st-au audio { width: 260px; max-width: 100%; }
 .stx { margin-left: auto; width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,.2); color: #fff; font-size: 15px; flex: none; }
+
+/* ANIMASI KIRIM PESAN, BALAS, STIKER */
+@keyframes inMe { from { opacity: 0; transform: translate(22px, 12px) scale(.9); } to { opacity: 1; transform: none; } }
+@keyframes inOt { from { opacity: 0; transform: translate(-22px, 12px) scale(.9); } to { opacity: 1; transform: none; } }
+.m.new.me { animation: inMe .3s cubic-bezier(.2,.9,.3,1.15); transform-origin: bottom right; }
+.m.new:not(.me) { animation: inOt .3s cubic-bezier(.2,.9,.3,1.15); transform-origin: bottom left; }
+@keyframes fly { 0% { transform: scale(1); } 35% { transform: translate(7px,-7px) rotate(-20deg) scale(.88); } 100% { transform: none; } }
+.send { transition: transform .12s; } .send:active { transform: scale(.88); } .send.fly { animation: fly .38s ease; }
+.m { touch-action: pan-y; will-change: transform; }
+.m.rdy { box-shadow: 0 0 0 2px var(--green); }
+@keyframes flash { 0%, 100% { filter: none; } 30% { filter: brightness(1.35) saturate(1.4); } }
+.m.flash { animation: flash 1.1s ease; }
+#rpb { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: var(--panel); border-top: 1px solid var(--line); animation: rpIn .2s ease; }
+#rpb[hidden] { display: none; }
+@keyframes rpIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.rpi { flex: 1; min-width: 0; border-left: 4px solid var(--green); padding: 4px 10px; background: var(--bg); border-radius: 8px; }
+.rpi b { display: block; color: var(--green); font-size: 13px; }
+.rpi span { display: block; color: var(--sub); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#rpx { font-size: 18px; color: var(--sub); width: 34px; height: 34px; flex: none; }
+.rq { background: rgba(0,0,0,.1); border-left: 3px solid var(--green); border-radius: 8px; padding: 4px 8px; margin-bottom: 4px; font-size: 12px; cursor: pointer; }
+.rq b { display: block; color: var(--green); font-size: 12px; }
+.rq span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; opacity: .85; }
+#skp { background: var(--panel); border-top: 1px solid var(--line); height: 270px; display: flex; flex-direction: column; animation: skIn .22s ease; }
+#skp[hidden] { display: none; }
+@keyframes skIn { from { height: 0; opacity: 0; } to { height: 270px; opacity: 1; } }
+.skh { display: flex; align-items: center; justify-content: space-between; padding: 8px 14px 0; font-size: 13px; }
+.skh button { font-size: 16px; color: var(--sub); }
+.skg { flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 10px; padding: 10px 12px; align-content: start; justify-items: center; }
+.skn { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; width: 76px; }
+.skn .skc { width: 64px; height: 64px; border-radius: 50%; border: 2px dashed var(--green); display: flex; align-items: center; justify-content: center; color: var(--green); font-size: 34px; line-height: 1; transition: transform .15s; }
+.skn:active .skc { transform: scale(.9); }
+.skn small { font-size: 11px; color: var(--sub); text-align: center; }
+.sk1 { position: relative; width: 72px; height: 72px; border-radius: 12px; background: var(--bg); cursor: pointer; display: flex; align-items: center; justify-content: center; overflow: hidden; animation: skPop .25s ease backwards; user-select: none; -webkit-touch-callout: none; }
+.sk1 img, .sk1 video { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+.sk1 i { position: absolute; top: 2px; right: 3px; font-size: 11px; font-style: normal; }
+@keyframes skPop { from { transform: scale(.6); opacity: 0; } }
+.m .sk { width: 150px; height: 150px; object-fit: contain; display: block; max-height: none; border-radius: 0 !important; margin: 0 !important; cursor: pointer; }
+.m.stk, .m.stk.me { background: none; box-shadow: none; padding: 2px 4px; }
+.m.stk small { float: none; display: block; text-align: right; margin: 0; opacity: 1; color: var(--sub); }
 </style>
 </head>
 
@@ -398,6 +437,7 @@ input, textarea, select { font: inherit; color: inherit; }
   </div>
 </div>
 
+<input type="file" id="skf" accept="image/*,video/*" hidden>
 <input type="file" id="sf" accept="image/*,video/*" multiple hidden>
 <input type="file" id="sm" accept="audio/*" multiple hidden>
 <input type="file" id="af" accept="image/*,video/*" hidden>
@@ -713,7 +753,7 @@ function tick(c, m) {
 
 function crow(c) {
   const v = c.msgs.filter(m => !(m.d || []).includes(me)), l = v[v.length - 1], n = cname(c), u = unread(c);
-  const p = l ? (l.x ? '🚫 Pesan dihapus' : (l.f === '!' ? '' : c.type === 'g' && l.f !== me ? '@' + l.f + ': ' : l.f === me ? 'Kamu: ' : '') + (l.text || ({ sm: '🏷 Tag status', v: '🎬 Video', a: '🎵 Musik', f: '📄 File', i: '📷 Foto', o: '👁 Foto 1x lihat' }[l.mt] || '📎 Media'))) : (c.type === 'g' ? c.members.length + ' anggota' : 'Belum ada pesan');
+  const p = l ? (l.x ? '🚫 Pesan dihapus' : (l.f === '!' ? '' : c.type === 'g' && l.f !== me ? '@' + l.f + ': ' : l.f === me ? 'Kamu: ' : '') + (l.text || ({ sm: '🏷 Tag status', v: '🎬 Video', a: '🎵 Musik', f: '📄 File', i: '📷 Foto', o: '👁 Foto 1x lihat', s: '💟 Stiker' }[l.mt] || '📎 Media'))) : (c.type === 'g' ? c.members.length + ' anggota' : 'Belum ada pesan');
   return `<div class="row" data-c="${c.id}">${av(n, '', c.type === 'g' && c.pic ? { mt: 'i', src: c.pic } : null)}<div class="t"><b>${c.type === 'g' ? '👥 ' : '@'}${esc(n)}${c.type === 'g' ? '' : vb(n)}</b><small class="${u ? 'u' : ''}">${esc(p)}</small></div><div style="text-align:right"><small style="${u ? 'color:var(--green)' : ''}">${l ? hm(l.t) : ''}</small>${u ? `<br><span class="bd">${u}</span>` : ''}</div></div>`;
 }
 
@@ -883,7 +923,7 @@ $('#list').onclick = e => {
 };
 
 function openChat(id) { 
-  if(cur !== id) stopMedia(); 
+  if(cur !== id) { stopMedia(); clearReply(); toggleSkp(false); } 
   cur = id; 
   $('#app').classList.add('open'); 
   tab = db.chats[id].type === 'g' ? 'group' : 'chat'; 
@@ -907,7 +947,7 @@ function renderChat(bottom) {
   const c = db.chats[cur], n = cname(c);
   { let ch = false; c.msgs.forEach(m => { if(m.f !== me && m.f !== '!' && !(m.r = m.r || []).includes(me)) { m.r.push(me); ch = true; } }); if(ch) save(); }
   if(!$('#msgs')) {
-    M.innerHTML = `<div class="wl" id="wpl"></div><div class="wl" id="wpd"></div><div class="hd"><button class="ib bk" id="bk">←</button><div id="ca"></div><div class="who"><b id="cn"></b><small id="cm"></small></div><button class="ib" id="wb" title="Menu">⋮</button></div><div id="cd" hidden><button id="cw">🎨 Ubah wallpaper</button><button id="ci">ℹ️ Info</button></div><div id="msgs"></div><div class="comp"><button class="ib" id="at" title="Lampirkan">📎</button><input type="text" id="tx" placeholder="Ketik pesan" autocomplete="off"><button class="send" id="sd">➤</button></div><div id="ad" hidden><button data-k="i">📷 Foto</button><button data-k="o">👁 Foto 1x lihat</button><button data-k="v">🎬 Video</button><button data-k="a">🎵 Musik</button><button data-k="f">📄 File</button></div>`;
+    M.innerHTML = `<div class="wl" id="wpl"></div><div class="wl" id="wpd"></div><div class="hd"><button class="ib bk" id="bk">←</button><div id="ca"></div><div class="who"><b id="cn"></b><small id="cm"></small></div><button class="ib" id="wb" title="Menu">⋮</button></div><div id="cd" hidden><button id="cw">🎨 Ubah wallpaper</button><button id="ci">ℹ️ Info</button></div><div id="msgs"></div><div id="rpb" hidden></div><div class="comp"><button class="ib" id="stk" title="Stiker">🙂</button><button class="ib" id="at" title="Lampirkan">📎</button><input type="text" id="tx" placeholder="Ketik pesan" autocomplete="off"><button class="send" id="sd">➤</button></div><div id="ad" hidden><button data-k="i">📷 Foto</button><button data-k="o">👁 Foto 1x lihat</button><button data-k="v">🎬 Video</button><button data-k="a">🎵 Musik</button><button data-k="f">📄 File</button></div><div id="skp" hidden></div>`;
     $('#bk').onclick = () => { stopMedia(); $('#app').classList.remove('open'); cur = null; setTimeout(() => { if(!cur) M.innerHTML = '<div class="ph">Pilih chat atau cari username<br>untuk mulai mengobrol 💬</div>'; }, 350); };
     let lp, lpx = 0, lpy = 0; const MS = $('#msgs'); MS._lp = 0;
     MS.addEventListener('pointerdown', e => {
@@ -917,20 +957,37 @@ function renderChat(bottom) {
     });
     MS.addEventListener('pointermove', e => { if(Math.abs(e.clientX - lpx) > 10 || Math.abs(e.clientY - lpy) > 10) clearTimeout(lp); });
     ['pointerup', 'pointerleave', 'pointercancel'].forEach(v => MS.addEventListener(v, () => clearTimeout(lp)));
+    let sw = null;
+    MS.addEventListener('pointerdown', e => { const el = e.target.closest('.m'); sw = null; if(!el || e.target.closest('audio,video[controls],a')) return; sw = { el, x: e.clientX, y: e.clientY, dx: 0, on: false }; });
+    MS.addEventListener('pointermove', e => {
+      if(!sw) return; const dx = e.clientX - sw.x, dy = e.clientY - sw.y;
+      if(!sw.on) { if(Math.abs(dx) > 14 && Math.abs(dx) > Math.abs(dy) * 1.5) { sw.on = true; clearTimeout(lp); sw.el.style.transition = 'none'; try { MS.setPointerCapture(e.pointerId); } catch(x) {} } else return; }
+      sw.dx = Math.max(-80, Math.min(80, dx)); sw.el.style.transform = `translateX(${sw.dx}px)`; sw.el.classList.toggle('rdy', Math.abs(sw.dx) >= 56);
+    });
+    const swEnd = () => {
+      if(!sw) return; const w = sw; sw = null; if(!w.on) return;
+      w.el.style.transition = 'transform .24s cubic-bezier(.2,.8,.2,1)'; w.el.style.transform = ''; w.el.classList.remove('rdy'); MS._lp = 1;
+      if(Math.abs(w.dx) >= 56) setReply(+w.el.dataset.i);
+      setTimeout(() => { w.el.style.transition = ''; }, 300);
+    };
+    ['pointerup', 'pointercancel'].forEach(v => MS.addEventListener(v, swEnd));
     MS.addEventListener('contextmenu', e => { const el = e.target.closest('.m'); if(!el) return; e.preventDefault(); if(!MS._lp) { MS._lp = 1; mmenu(+el.dataset.i); } });
     ['pause', 'ended'].forEach(v => MS.addEventListener(v, () => { if(MS._defer) setTimeout(() => { if(cur) renderChat(); }, 60); }, true));
     MS.addEventListener('click', e => {
       if(MS._lp) { MS._lp = 0; return; }
       const a = e.target.closest('.ul'); if(a) { e.preventDefault(); return a.dataset.g ? joinCode(a.dataset.g) : openUser(a.dataset.un); }
+      const rq = e.target.closest('.rq'); if(rq) return jumpTo(+rq.dataset.rt, rq.dataset.rf);
+      const sk = e.target.closest('.m.stk'); if(sk) return stkMenu(+sk.dataset.i);
       const o1 = e.target.closest('.once.go'); if(o1) return openOnce(+o1.dataset.i);
       const dl = e.target.closest('.dlm'); if(dl) return fetchBig(dl.dataset.dl, dl);
       const t = e.target.closest('.vt,.im'); if(t) openMv(+t.dataset.i);
     });
-    $('#at').onclick = e => { e.stopPropagation(); $('#ad').hidden = !$('#ad').hidden; };
+    $('#at').onclick = e => { e.stopPropagation(); toggleSkp(false); $('#ad').hidden = !$('#ad').hidden; };
+    $('#stk').onclick = e => { e.stopPropagation(); toggleSkp(); };
     $('#ad').onclick = e => { const k = e.target.dataset.k; if(!k) return; const a = $('#af'); a.accept = { o: 'image/*', i: 'image/*', v: 'video/*', a: 'audio/*', f: '*/*' }[k]; a.dataset.k = k; a.click(); };
     $('#wb').onclick = e => { e.stopPropagation(); $('#cd').hidden = !$('#cd').hidden; };
     $('#cw').onclick = wpOpen; $('#ci').onclick = () => { $('#cd').hidden = true; if(c.type === 'g') ginfo(); else uinfo(n); };
-    $('#sd').onclick = send; $('#tx').onkeydown = e => { if(e.key === 'Enter') send(); };
+    $('#sd').onclick = () => { const b = $('#sd'); b.classList.remove('fly'); void b.offsetWidth; b.classList.add('fly'); send(); }; $('#tx').onkeydown = e => { if(e.key === 'Enter') send(); };
   }
   $('#ca').innerHTML = av(n, '', c.type === 'g' && c.pic ? { mt: 'i', src: c.pic } : null);
   $('#cn').innerHTML = c.type === 'g' ? '👥 ' + esc(n) : '@' + esc(n) + vb(n);
@@ -939,15 +996,21 @@ function renderChat(bottom) {
   hdrSub(c);
 
   const B = $('#msgs'), near = bottom || B.scrollHeight - B.scrollTop - B.clientHeight < 80;
-  const HT = c.msgs.some(m => !(m.d || []).includes(me)) ? c.msgs.map((m, i) => (m.d || []).includes(me) ? '' : m.f === '!' ? `<div class="empty sysm" style="padding:4px;font-size:12px">${sysHtml(m.text)}</div>` : `<div class="m ${m.f === me ? 'me' : ''}" data-i="${i}">${c.type === 'g' && m.f !== me ? `<div class="n">@${esc(m.f)}${vb(m.f)}${isAdm(c, m.f) ? ' <small>· admin</small>' : ''}</div>` : ''}${m.x ? '<i style="opacity:.6">🚫 Pesan dihapus</i>' : mhtml(m, i) + (m.text ? lk(m.text).replace(/\n/g, '<br>') : '')}<small>${m.e && !m.x ? 'diedit · ' : ''}${hm(m.t)}${m.f === me ? tick(c, m) : ''}</small></div>`).join('') : '<div class="empty">Belum ada pesan 👋</div>';
+  const HT = c.msgs.some(m => !(m.d || []).includes(me)) ? c.msgs.map((m, i) => (m.d || []).includes(me) ? '' : m.f === '!' ? `<div class="empty sysm" style="padding:4px;font-size:12px">${sysHtml(m.text)}</div>` : `<div class="m ${m.f === me ? 'me' : ''}${m.mt === 's' && !m.x ? ' stk' : ''}" data-i="${i}">${c.type === 'g' && m.f !== me ? `<div class="n">@${esc(m.f)}${vb(m.f)}${isAdm(c, m.f) ? ' <small>· admin</small>' : ''}</div>` : ''}${m.rp && !m.x ? rqHtml(m.rp) : ''}${m.x ? '<i style="opacity:.6">🚫 Pesan dihapus</i>' : mhtml(m, i) + (m.text ? lk(m.text).replace(/\n/g, '<br>') : '')}<small>${m.e && !m.x ? 'diedit · ' : ''}${hm(m.t)}${m.f === me ? tick(c, m) : ''}</small></div>`).join('') : '<div class="empty">Belum ada pesan 👋</div>';
   
   const playing = [...B.querySelectorAll('audio,video')].some(x => !x.paused && !x.ended);
-  if(B._h !== HT) { if(playing) B._defer = 1; else { B._h = HT; B._defer = 0; B.innerHTML = HT; hyd(B); } }
-  if(near) B.scrollTop = B.scrollHeight;
+  let newFrom = -1;
+  if(B._h !== HT) { if(playing) B._defer = 1; else {
+    B._h = HT; B._defer = 0; B.innerHTML = HT; hyd(B);
+    if(B._cid === c.id && typeof B._n === 'number' && c.msgs.length > B._n) newFrom = B._n;
+    B._cid = c.id; B._n = c.msgs.length;
+    if(newFrom >= 0) B.querySelectorAll('.m').forEach(el => { if(+el.dataset.i >= newFrom) el.classList.add('new'); });
+  } }
+  if(near) B.scrollTo({ top: B.scrollHeight, behavior: newFrom >= 0 ? 'smooth' : 'instant' });
 }
 
 function push(m) { if(cur) pushTo(cur, m); }
-function send() { const t = $('#tx').value.trim(); if(!t || !cur || !canSend()) return; $('#tx').value = ''; push({ text: t }); }
+function send() { const t = $('#tx').value.trim(); if(!t || !cur || !canSend()) return; $('#tx').value = ''; push({ text: t, ...takeReply() }); }
 
 /* STATUS SYSTEM */
 async function statusFiles(inp) {
@@ -1041,8 +1104,9 @@ async function delS(i) {
   if(!await ask('Hapus status ini?', { ok: 'Hapus' })) return;
   const s = vs[i]; if(!s) return;
   document.querySelectorAll('#vw audio,#vw video').forEach(m => { try { m.pause(); } catch(e) {} });
-  if(s.mid) mdel(s.mid);
-  load(); db.sdel = db.sdel || []; if(s.id) db.sdel.push(s.id); db.status = db.status.filter(x => !(x.id === s.id || (x.u === s.u && x.t === s.t))); save();
+  load(); db.sdel = db.sdel || []; if(s.id) db.sdel.push(s.id);
+  db.status = db.status.filter(x => !(x.id === s.id || (x.u === s.u && x.t === s.t))); save();
+  if(s.mid && !midUsed(s.mid)) mdel(s.mid);
   vs.splice(i, 1); if(vi >= vs.length) vi = vs.length - 1;
   if(vs.length) showS(); else closeStatus();
   renderSide();
@@ -1129,6 +1193,10 @@ function warm() {
 function mhtml(m, i) {
   const fw = m.fwd ? '<div class="fw">↪ Diteruskan</div>' : '';
   if(!m.mt || m.mt === 'sm') return fw;
+  if(m.mt === 's') {
+    const id = m.mid, u = (id && urls.get(id)) || '', d = id ? ` data-mid="${id}"` : '';
+    return fw + (m.sk === 'v' ? `<video class="sk" data-i="${i}"${d}${u ? ` src="${u}"` : ''} muted loop autoplay playsinline></video>` : `<img class="sk" data-i="${i}"${d} src="${u || 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='}">`);
+  }
   if(m.mt === 'o') {
     if(m.f === me) return `<div class="once">👁 <span>Foto 1x lihat<span class="s">${(m.vo || []).length ? 'Sudah dibuka' : 'Belum dibuka'}</span></span></div>`;
     if((m.vo || []).includes(me)) return '<div class="once done">👁 Foto sudah dibuka</div>';
@@ -1535,7 +1603,7 @@ $('#af').onchange = async e => {
   toast('Mengirim…');
   const mid = await mput(blob); urls.set(mid, URL.createObjectURL(blob));
   try { await mup(mid, blob, p => toast('Mengirim ' + p + '%')); } catch(err) { toast('Upload ke server gagal, penerima mungkin tidak bisa membuka file'); }
-  pushTo(id0, { mt: k, mid, fn: f.name, sz: f.size, ...(k === 'o' ? { once: 1 } : {}) });
+  pushTo(id0, { mt: k, mid, fn: f.name, sz: f.size, ...(k === 'o' ? { once: 1 } : {}), ...takeReply() });
   if(k === 'o') { urls.delete(mid); mdelLocal(mid); }
 };
 
@@ -1621,7 +1689,7 @@ function mmenu(i) {
   };
 }
 function openFwd(m) {
-  fwdMsg = { text: m.text, mt: m.mt, mid: m.mid, src: m.src, fn: m.fn, sz: m.sz };
+  fwdMsg = { text: m.text, mt: m.mt, mid: m.mid, src: m.src, fn: m.fn, sz: m.sz, sk: m.sk };
   $('#fwd_status').style.display = (['i', 'v', 'a'].includes(m.mt) || (!m.mt && m.text)) ? '' : 'none';
   $('#fwdlist').innerHTML = myChats().map(c => `<div class="row" data-c="${c.id}">${av(cname(c), '', c.type === 'g' && c.pic ? { mt: 'i', src: c.pic } : null)}<div class="t"><b>${c.type === 'g' ? '👥 ' : '@'}${esc(cname(c))}</b></div></div>`).join('') || '<div class="empty">Belum ada obrolan</div>';
   $('#fwdm').hidden = false;
@@ -1865,6 +1933,118 @@ async function botCS(id, text) {
   botSay(id, 'botcs', { text: csReply(text) });
 }
 
+
+/* ============ BALAS PESAN (geser) ============ */
+let replyTo = null;
+const msgPreview = m => m.text ? m.text.slice(0, 80) : ({ i: '📷 Foto', v: '🎬 Video', a: '🎵 Musik', f: '📄 ' + (m.fn || 'File'), o: '👁 Foto 1x lihat', s: '💟 Stiker' }[m.mt] || '');
+const rqHtml = rp => `<div class="rq" data-rt="${rp.t}" data-rf="${esc(rp.f)}"><b>${rp.f === me ? 'Anda' : '@' + esc(rp.f)}</b><span>${esc(rp.tx || '')}</span></div>`;
+function setReply(i) {
+  const c = db.chats[cur], m = c && c.msgs[i]; if(!m || m.x || m.f === '!') return;
+  replyTo = { f: m.f, t: m.t, tx: msgPreview(m) };
+  const b = $('#rpb'); if(!b) return;
+  b.innerHTML = `<div class="rpi"><b>${m.f === me ? 'Anda' : '@' + esc(m.f)}</b><span>${esc(replyTo.tx)}</span></div><button id="rpx" title="Batal">✕</button>`;
+  b.hidden = false; $('#rpx').onclick = clearReply;
+  try { navigator.vibrate && navigator.vibrate(12); } catch(e) {}
+  const t = $('#tx'); if(t) t.focus();
+}
+function clearReply() { replyTo = null; const b = $('#rpb'); if(b) { b.hidden = true; b.innerHTML = ''; } }
+const takeReply = () => { if(!replyTo) return {}; const r = { rp: replyTo }; clearReply(); return r; };
+function jumpTo(t, f) {
+  const c = db.chats[cur]; if(!c) return;
+  const i = c.msgs.findIndex(m => m.t === t && m.f === f), el = i >= 0 && $('#msgs [data-i="' + i + '"]');
+  if(!el) return toast('Pesan asli tidak ditemukan');
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
+}
+function midUsed(mid) {
+  if(!mid) return false;
+  return Object.values(db.chats).some(c => c.msgs.some(m => m.mid === mid && !m.x)) || db.status.some(s => s.mid === mid) || Object.values(db.users).some(u => (u.stk || []).some(k => k.mid === mid));
+}
+
+/* ============ STIKER ============ */
+const myStk = () => ((db.users[me] || {}).stk || []).slice().sort((a, b) => b.t - a.t);
+function toggleSkp(force) {
+  const P = $('#skp'); if(!P) return;
+  const open = force !== undefined ? force : P.hidden;
+  if(!open) { P.hidden = true; return; }
+  const ad = $('#ad'); if(ad) ad.hidden = true;
+  load(); P.hidden = false; drawSkp();
+}
+function drawSkp() {
+  const P = $('#skp'); if(!P || P.hidden) return;
+  const GIF = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+  P.innerHTML = `<div class="skh"><b>Stiker</b><button id="skc" title="Tutup">✕</button></div>
+    <div class="skg"><div class="skn" id="skadd"><div class="skc">+</div><small>Buat stiker</small></div>${myStk().map(k => `<div class="sk1" data-k="${k.id}">${k.mt === 'v' ? `<video data-mid="${k.mid}" muted loop autoplay playsinline></video>` : `<img data-mid="${k.mid}" src="${GIF}" alt="">`}${k.fav ? '<i>⭐</i>' : ''}</div>`).join('')}</div>`;
+  hyd(P);
+  $('#skc').onclick = () => toggleSkp(false);
+  $('#skadd').onclick = () => $('#skf').click();
+  const G = P.querySelector('.skg'); let t = null, fired = false;
+  G.onpointerdown = e => { const el = e.target.closest('.sk1'); fired = false; if(!el) return; clearTimeout(t); t = setTimeout(() => { fired = true; delStk(el.dataset.k); }, 550); };
+  ['pointerup', 'pointerleave', 'pointercancel', 'pointermove'].forEach(v => G.addEventListener(v, () => clearTimeout(t)));
+  G.oncontextmenu = e => { const el = e.target.closest('.sk1'); if(el) { e.preventDefault(); if(!fired) { fired = true; delStk(el.dataset.k); } } };
+  G.onclick = e => { if(fired) { fired = false; return; } const el = e.target.closest('.sk1'); if(!el) return; const k = myStk().find(x => x.id === el.dataset.k); if(k) sendStk(k); };
+}
+function sendStk(k) { if(!cur || !canSend()) return; pushTo(cur, { mt: 's', sk: k.mt, mid: k.mid, sz: k.sz, ...takeReply() }); toggleSkp(false); }
+async function delStk(id) {
+  if(!await ask('Hapus stiker ini dari daftarmu?', { ok: 'Hapus' })) return;
+  load(); const u = db.users[me]; u.stk = (u.stk || []).filter(x => x.id !== id); save(); drawSkp(); toast('Stiker dihapus');
+}
+function stkAdd(m, fav) {
+  load(); const u = db.users[me]; u.stk = u.stk || [];
+  if(u.stk.some(x => x.mid === m.mid)) return false;
+  u.stk.push({ id: 'k' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), mid: m.mid, mt: m.sk || m.mt, sz: m.sz, t: Date.now(), fav: fav ? 1 : 0 });
+  if(u.stk.length > 300) { u.stk.sort((a, b) => b.t - a.t); u.stk = u.stk.slice(0, 300); }
+  save(); return true;
+}
+function stkMenu(i) {
+  load(); const m = db.chats[cur] && db.chats[cur].msgs[i]; if(!m || m.mt !== 's' || m.x) return;
+  const has = (db.users[me].stk || []).find(x => x.mid === m.mid), st = 'background:var(--bg)', u = urls.get(m.mid) || '';
+  $('#mb2').innerHTML = `<div style="padding:14px;text-align:center">${m.sk === 'v' ? `<video src="${u}" muted loop autoplay playsinline style="max-width:140px;max-height:140px"></video>` : `<img src="${u}" style="max-width:140px;max-height:140px">`}</div>
+    ${has ? `<button class="acct-btn" data-a="unfav" style="${st}">💔 ${has.fav ? 'Hapus dari favorit' : 'Hapus dari stikerku'}</button>` : `<button class="acct-btn" data-a="fav" style="${st}">⭐ Tambahkan ke favorit</button>`}
+    <button class="acct-btn" data-a="send" style="${st}">📤 Kirim stiker ini</button>
+    <button class="acct-btn" data-a="x" style="${st}">Tutup</button>`;
+  $('#mm').hidden = false;
+  $('#mb2').onclick = e => {
+    const a = e.target.closest('[data-a]'); if(!a) return; $('#mm').hidden = true; const k = a.dataset.a;
+    if(k === 'fav') { stkAdd(m, true); toast('Ditambahkan ke favorit ⭐'); }
+    else if(k === 'unfav') { load(); const us = db.users[me]; us.stk = (us.stk || []).filter(x => x.mid !== m.mid); save(); toast('Dihapus dari daftar stiker'); }
+    else if(k === 'send') { if(canSend()) pushTo(cur, { mt: 's', sk: m.sk, mid: m.mid, sz: m.sz }); }
+    drawSkp();
+  };
+}
+async function toSticker(f) {
+  try {
+    const i = await loadImg(f), S = 512, k = Math.min(S / i.naturalWidth, S / i.naturalHeight), w = Math.round(i.naturalWidth * k), h = Math.round(i.naturalHeight * k);
+    const c = document.createElement('canvas'); c.width = c.height = S; c.getContext('2d').drawImage(i, (S - w) / 2, (S - h) / 2, w, h);
+    return (await new Promise(r => c.toBlob(r, 'image/webp', .92))) || f;
+  } catch(e) { return f; }
+}
+const vidDur = f => new Promise(ok => { const v = document.createElement('video'), u = URL.createObjectURL(f); v.preload = 'metadata'; v.onloadedmetadata = () => { URL.revokeObjectURL(u); ok(v.duration || 0); }; v.onerror = () => { URL.revokeObjectURL(u); ok(0); }; v.src = u; });
+$('#skf').onchange = async e => {
+  const f = await takeFile(e.target); if(!f) return;
+  const isV = f.type.startsWith('video/'), isI = f.type.startsWith('image/');
+  if(!isV && !isI) return toast('Pilih foto atau video');
+  let blob = f;
+  if(isI) blob = await toSticker(f);
+  else { if(f.size > 20 * 1024 * 1024) return toast('Video stiker maksimal 20 MB'); if(await vidDur(f) > 10.5) return toast('Video stiker maksimal 10 detik'); }
+  previewStk(blob, isV ? 'v' : 'i');
+};
+function previewStk(blob, kind) {
+  const u = URL.createObjectURL(blob), d = document.createElement('div'); d.className = 'ov'; d.style.zIndex = 200; document.body.appendChild(d);
+  d.innerHTML = `<div class="md" style="text-align:center;max-width:320px"><h3>Buat Stiker</h3>
+    <div style="display:inline-block;border-radius:14px;padding:8px;background:repeating-conic-gradient(#8883 0 25%,transparent 0 50%) 0 0/16px 16px">${kind === 'v' ? `<video src="${u}" muted loop autoplay playsinline style="max-width:220px;max-height:220px;display:block"></video>` : `<img src="${u}" style="max-width:220px;max-height:220px;display:block">`}</div>
+    <button class="btn-auth" id="skok" style="margin-top:12px">Simpan stiker</button>
+    <button class="btn-auth" id="skno" style="background:var(--line);color:var(--txt);margin-top:8px;box-shadow:none">Batal</button></div>`;
+  const close = () => { d.remove(); };
+  d.querySelector('#skno').onclick = close; d.onclick = e => { if(e.target === d) close(); };
+  d.querySelector('#skok').onclick = async () => {
+    close(); toast('Menyimpan stiker…');
+    const mid = await mput(blob); urls.set(mid, u);
+    try { await mup(mid, blob, p => toast('Mengunggah ' + p + '%')); } catch(err) { return toast('Upload gagal, stiker tidak disimpan'); }
+    load(); const us = db.users[me]; us.stk = us.stk || [];
+    us.stk.push({ id: 'k' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), mid, mt: kind, sz: blob.size, t: Date.now(), fav: 0 });
+    save(); toggleSkp(true); toast('Stiker dibuat ✅');
+  };
+}
 document.addEventListener('DOMContentLoaded', async () => {
   load();
   initAuthHandlers();
