@@ -474,6 +474,7 @@ input, textarea, select { font: inherit; color: inherit; }
 
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
 
 <script>
 const firebaseConfig = {
@@ -487,11 +488,52 @@ const firebaseConfig = {
   measurementId: "G-4GDLP38GR5"
 };
 
+const VAPID_KEY = "BFahj1GPNfCEcWjcslP_UgBBsTs4mw0Ku1x-Vfl9UNYPmcFT-puUF1z9XkkRVGl0yaOmtQ-dnrowoydnKUlzNwc";
+
 let firebaseDb = null;
+let messaging = null;
+
 try {
   firebase.initializeApp(firebaseConfig);
   firebaseDb = firebase.database();
+  
+  if (firebase.messaging.isSupported()) {
+    messaging = firebase.messaging();
+  }
 } catch(e) { console.warn('Firebase tidak tersedia, mode lokal:', e); }
+
+/* FUNGSI INISIALISASI PUSH NOTIFICATION */
+async function initPushNotification() {
+  if (!messaging) return;
+  try {
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+      const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+      const token = await messaging.getToken({
+        vapidKey: VAPID_KEY,
+        serviceWorkerRegistration: registration
+      });
+
+      if (token && me) {
+        load();
+        if (db.users[me]) {
+          db.users[me].fcmToken = token;
+          save();
+        }
+      }
+    }
+  } catch (error) {
+    console.warn('Gagal mengaktifkan notifikasi:', error);
+  }
+}
+
+if (messaging) {
+  messaging.onMessage((payload) => {
+    if (payload.notification) {
+      toast(`${payload.notification.title}: ${payload.notification.body}`);
+    }
+  });
+}
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -543,7 +585,7 @@ function save() {
   return true;
 }
 
-/* ===== SINKRONISASI DATA (merge 3-arah supaya data tidak saling menimpa) ===== */
+/* ===== SINKRONISASI DATA ===== */
 let SYNCED = false, syncWaiters = [], base = null, dirty = false, pushT = null, pushFail = 0, TOFF = 0;
 const eq = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 const isO = x => x && typeof x === 'object' && !Array.isArray(x);
@@ -649,7 +691,6 @@ async function hash(s) {
   return sha256hex(unescape(encodeURIComponent(s)));
 }
 
-/* FUNGSI TOGGLE MODE AUTHENTICATION FIXED */
 function mode(r) {
   reg = r;
   $('#auth-title').textContent = r ? 'Form Registrasi' : 'Form Login';
@@ -721,6 +762,7 @@ function start(u) {
   presSet(1);
   scanTags(true);
   renderSide();
+  initPushNotification();
 }
 
 window.logout = () => {
@@ -1226,8 +1268,6 @@ function stopMedia() {
 }
 $('#mvb').onclick = stopMedia;
 
-
-
 const PRIV_ITEMS = [['pic','🖼️ Foto Profil'], ['online','🟢 Online & Terakhir Dilihat'], ['bio','📝 Bio'], ['readReceipts','✔✔ Centang Biru (Tanda Dibaca)']];
 const PRIV_MODES = [['all','Tampilkan untuk semua'], ['except','Semua terkecuali…'], ['only','Hanya (pilih)…'], ['nobody','Tidak ada']];
 const privOf = (u, k) => { const p = (((db.users[u] || {}).priv) || {})[k] || {}; return { mode: p.mode || 'all', list: p.list || [] }; };
@@ -1324,7 +1364,6 @@ function ownerPanel() {
   const chipsOf = u => { const x = db.users[u] || {}; return (x.ban ? '<span class="ow-chip r">🚫 Banned</span>' : '') + (frz(u) ? `<span class="ow-chip y">🧊 Beku · ${fmtLeft(x.frz - Date.now())}</span>` : '') + (hasBadge(u) ? '<span class="ow-chip b">✔ Centang</span>' : '') + (u === OWN ? '<span class="ow-chip g">👑 Owner</span>' : ''); };
   const shell = h => { d.innerHTML = `<div class="ow-box">${h}</div>`; };
 
-  /* ---- daftar akun ---- */
   const drawUsers = () => {
     const L = d.querySelector('#ow-ul'); if(!L) return;
     const f = users().filter(u => u.includes(q));
@@ -1342,7 +1381,6 @@ function ownerPanel() {
     drawUsers();
   };
 
-  /* ---- detail akun ---- */
   const paintBadge = () => {
     const pv = d.querySelector('#ow-pv'); if(!pv) return;
     pv.innerHTML = `<span class="vf big" style="background:${color};box-shadow:0 0 14px ${color}aa">✔</span><b>@${esc(tu)}</b>`;
@@ -1397,7 +1435,6 @@ function ownerPanel() {
       sub = sub === a ? null : a; detail();
     });
 
-    // bekukan
     d.querySelectorAll('[data-ui]').forEach(el => el.onclick = () => { ui = +el.dataset.ui; d.querySelectorAll('[data-ui]').forEach(c => c.classList.toggle('on', +c.dataset.ui === ui)); });
     const fgo = d.querySelector('#ow-fgo');
     if(fgo) fgo.onclick = () => {
@@ -1410,7 +1447,6 @@ function ownerPanel() {
     const fun = d.querySelector('#ow-fun');
     if(fun) fun.onclick = () => { load(); delete db.users[u].frz; save(); toast('Pembekuan @' + u + ' dicairkan'); after(); sub = null; detail(); };
 
-    // reset password
     const pgo = d.querySelector('#ow-pgo');
     if(pgo) pgo.onclick = async () => {
       const pw = d.querySelector('#ow-np').value;
@@ -1419,7 +1455,6 @@ function ownerPanel() {
       db.users[u].pass = hp; save(); toast('Password @' + u + ' berhasil diganti'); sub = null; detail();
     };
 
-    // centang
     if(sub === 'badge') {
       paintBadge();
       d.querySelectorAll('.ow-sw').forEach(b => b.onclick = () => { color = b.dataset.c; paintBadge(); });
@@ -1449,8 +1484,6 @@ const visS = u => db.status.filter(s => s.u === u);
 function scanTags() {}
 function prep(f) { return new Promise(ok => { const r = new FileReader(); r.onload = () => ok({ src: r.result }); r.readAsDataURL(f); }); }
 
-
-/* ===== HAPUS OBROLAN (tekan lama) — hanya terhapus di akun sendiri ===== */
 let lpFired = false, lpT = null, lpX = 0, lpY = 0;
 const lpClear = () => clearTimeout(lpT);
 (() => {
@@ -1495,13 +1528,8 @@ function deleteChatForMe(id) {
   renderSide(); toast('Obrolan dihapus');
 }
 
-/* ===== Menu pesan (tekan lama pesan) ===== */
-
-
-
 function openUser(un) { if(db.users[un]) uinfo(un); else toast('User tidak ditemukan'); }
 
-/* ===== Grup ===== */
 $('#gx').onclick = () => { $('#gm').hidden = true; };
 $('#gc').onclick = () => {
   if(!canSend()) return; load();
@@ -1521,7 +1549,6 @@ function joinCode(cd) {
   $('#gm').hidden = true; openChat(c.id);
 }
 $('#gj').onclick = () => { const v = $('#gl').value.trim(), m = v.match(/([a-z0-9]{10})\s*$/i); joinCode(m ? m[1] : v); };
-
 
 $('#gz').onclick = () => { $('#gi').hidden = true; };
 $('#ab').onclick = () => {
@@ -1545,8 +1572,6 @@ $('#ga').onclick = async () => {
   $('#main').innerHTML = '<div class="ph">Pilih chat atau cari username<br>untuk mulai mengobrol 💬</div>'; renderSide();
 };
 
-
-/* ============ MEDIA: kirim foto / 1x lihat / video / musik / file ============ */
 const MAXB = 100 * 1024 * 1024;
 let PRES = {}, onceOpen = null, umUser = null, gpic = null, fwdMsg = null;
 try { PRES = JSON.parse(localStorage.getItem('chatku_pres') || '{}'); } catch(e) {}
@@ -1626,7 +1651,6 @@ function finishOnce() {
   if(cur) renderChat();
 }
 
-/* ============ PRESENCE (online / offline akurat) ============ */
 function fmtSeen(t) {
   const d = new Date(t), n = new Date(), y = new Date(n); y.setDate(n.getDate() - 1);
   if(d.toDateString() === n.toDateString()) return 'hari ini ' + hm(t);
@@ -1658,7 +1682,6 @@ function closeChatUI() {
   $('#main').innerHTML = '<div class="ph">Pilih chat atau cari username<br>untuk mulai mengobrol 💬</div>';
 }
 
-/* ============ MENU PESAN + TERUSKAN ============ */
 function mmenu(i) {
   load(); const c = db.chats[cur], m = c && c.msgs[i];
   if(!m || m.x || m.f === '!') return;
@@ -1729,7 +1752,6 @@ $('#fwd_status').onclick = () => { if(!fwdMsg || !canSend()) return; $('#fwdm').
 
 $('#fwdx').onclick = () => { $('#fwdm').hidden = true; };
 
-/* ============ GRUP: peran, admin, kick, nama & bio terpisah ============ */
 const ownerOf = c => c.owner && c.members.includes(c.owner) ? c.owner : ((c.admins || []).find(a => c.members.includes(a)) || c.members[0]);
 const roleOf = (c, u) => u === ownerOf(c) ? 'owner' : isAdm(c, u) ? 'admin' : 'member';
 const roleLbl = r => ({ owner: '👑 Pembuat grup', admin: '🛡️ Admin', member: 'Anggota' }[r]);
@@ -1808,7 +1830,6 @@ $('#gpf2').onchange = async e => {
   $('#gmp').innerHTML = `<img src="${gpic}" style="width:60px;height:60px;border-radius:50%;object-fit:cover">`;
 };
 
-/* ============ BOT: downloader, AI, customer service ============ */
 function botWelcome() {
   if(BOTS.includes(me)) return; load(); let ch = false;
   const W = {
@@ -1845,8 +1866,7 @@ async function fx(url, opt = {}, ms = 15000) {
   try { return await fetch(url, { ...opt, signal: ac.signal }); } finally { clearTimeout(t); }
 }
 
-// --- Downloader ---
-const DL_COBALT = ['https://api.cobalt.tools/'];   // endpoint kompatibel cobalt, silakan ganti/tambah
+const DL_COBALT = ['https://api.cobalt.tools/'];
 const DL_HELP = '📥 Bot Downloader\nKirim link video/foto publik dari TikTok, Instagram, Facebook, YouTube, Twitter/X, dll. Contoh:\nhttps://vt.tiktok.com/xxxxx';
 async function dlResolve(url) {
   let host = ''; try { host = new URL(url).hostname.replace(/^www\./, ''); } catch(e) { return null; }
@@ -1880,7 +1900,6 @@ async function botDL(id, text) {
   res.items.forEach((it, n) => botSay(id, BOT, { mt: it.type === 'video' ? 'v' : it.type === 'audio' ? 'a' : 'i', src: it.url, fn: it.name || (it.type === 'audio' ? 'Musik' : 'media'), ...(n === 0 && res.title ? { text: '✅ ' + String(res.title).slice(0, 200) } : {}) }));
 }
 
-// --- Bot AI ---
 function aiLocal(t) {
   const s = t.toLowerCase().trim();
   if(/^(hai|halo|hello|hi|hey|p|assalamualaikum)\b/.test(s)) return 'Halo @' + me + '! 👋 Ada yang bisa aku bantu?';
@@ -1905,7 +1924,6 @@ async function botAI(id, text) {
   botSay(id, 'botai', { text: String(ans || aiLocal(text)).slice(0, 2000) });
 }
 
-// --- Customer Service ---
 const CS_MENU = '🎧 Customer Service\nBalas dengan angka atau kata kunci:\n1. Cara daftar & login\n2. Lupa password\n3. Akun dibanned / dibekukan\n4. Privasi & centang biru\n5. Grup (buat, admin, kick)\n6. Status & media\n7. Hubungi owner → ketik: lapor <pesan>';
 function csReply(t) {
   const s = t.toLowerCase().trim();
@@ -1933,8 +1951,6 @@ async function botCS(id, text) {
   botSay(id, 'botcs', { text: csReply(text) });
 }
 
-
-/* ============ BALAS PESAN (geser) ============ */
 let replyTo = null;
 const msgPreview = m => m.text ? m.text.slice(0, 80) : ({ i: '📷 Foto', v: '🎬 Video', a: '🎵 Musik', f: '📄 ' + (m.fn || 'File'), o: '👁 Foto 1x lihat', s: '💟 Stiker' }[m.mt] || '');
 const rqHtml = rp => `<div class="rq" data-rt="${rp.t}" data-rf="${esc(rp.f)}"><b>${rp.f === me ? 'Anda' : '@' + esc(rp.f)}</b><span>${esc(rp.tx || '')}</span></div>`;
@@ -1960,7 +1976,6 @@ function midUsed(mid) {
   return Object.values(db.chats).some(c => c.msgs.some(m => m.mid === mid && !m.x)) || db.status.some(s => s.mid === mid) || Object.values(db.users).some(u => (u.stk || []).some(k => k.mid === mid));
 }
 
-/* ============ STIKER ============ */
 const myStk = () => ((db.users[me] || {}).stk || []).slice().sort((a, b) => b.t - a.t);
 function toggleSkp(force) {
   const P = $('#skp'); if(!P) return;
@@ -2045,6 +2060,7 @@ function previewStk(blob, kind) {
     save(); toggleSkp(true); toast('Stiker dibuat ✅');
   };
 }
+
 document.addEventListener('DOMContentLoaded', async () => {
   load();
   initAuthHandlers();
