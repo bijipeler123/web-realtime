@@ -211,6 +211,22 @@ input, textarea, select { font: inherit; color: inherit; }
 .ow-sw.on { border-color: var(--txt); transform: scale(1.12); }
 .ow-pv { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 14px; border-radius: 14px; background: var(--panel); border: 1px dashed var(--line); margin-bottom: 8px; font-size: 16px; }
 .ow-prof { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 4px 0 2px; }
+
+/* MEDIA / ONCE / ROLE */
+.once { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 12px; background: rgba(0,0,0,.08); font-size: 14px; }
+.once.go { cursor: pointer; background: linear-gradient(135deg, #6366f122, #ec489922); border: 1px dashed var(--green); }
+.once.done { opacity: .6; font-style: italic; }
+.once .s { display: block; font-size: 11px; opacity: .7; }
+.fw { font-size: 11px; opacity: .7; font-style: italic; margin-bottom: 2px; }
+.m audio { width: 230px; max-width: 100%; display: block; margin-top: 4px; }
+.m .au { font-size: 13px; }
+.rolepill { font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+.rolepill.owner { background: #f5b30126; color: #c98a00; } .rolepill.admin { background: #22c55e22; color: #16a34a; }
+.rolepill.member { background: var(--bg); color: var(--sub); border: 1px solid var(--line); }
+.st-au { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 24px; color: #fff; font-size: 44px; }
+.st-au b { font-size: 14px; max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.st-au audio { width: 260px; max-width: 100%; }
+.stx { margin-left: auto; width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,.2); color: #fff; font-size: 15px; flex: none; }
 </style>
 </head>
 
@@ -323,8 +339,9 @@ input, textarea, select { font: inherit; color: inherit; }
     <p id="gbio_disp" style="color:var(--sub);text-align:center;margin:4px 0 8px;font-size:13px"></p>
     <p id="gc2" style="margin:0 0 10px;color:var(--sub);text-align:center"></p>
     <div id="g_admin_opts" style="display:none">
-      <div style="display:flex;gap:6px;margin-bottom:10px">
-        <button class="chip" id="gedit">✏ Edit Nama & Bio</button>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
+        <button class="chip" id="gedit">✏ Nama</button>
+        <button class="chip" id="gbed">📝 Bio</button>
         <button class="chip" id="gpc">📷 Foto</button>
         <button class="chip" id="gpd">🗑 Hapus Foto</button>
       </div>
@@ -366,7 +383,7 @@ input, textarea, select { font: inherit; color: inherit; }
   </div>
 </div>
 
-<input type="file" id="sf" accept="image/*,video/*" hidden>
+<input type="file" id="sf" accept="image/*,video/*,audio/*" hidden>
 <input type="file" id="af" accept="image/*,video/*" hidden>
 <input type="file" id="pf" accept="image/*" hidden>
 <input type="file" id="wf" accept="image/*" hidden>
@@ -377,10 +394,10 @@ input, textarea, select { font: inherit; color: inherit; }
 <div class="ov" id="im" hidden onclick="if(event.target===this)this.hidden=true"><div class="md" style="max-height:80vh;overflow:auto"><h3>Info Pesan</h3><div id="it"></div></div></div>
 
 <!-- STATUS VIEWER DI TENGAH LAYAR -->
-<div class="ov" id="vw" hidden onclick="if(event.target===this)this.hidden=true">
+<div class="ov" id="vw" hidden onclick="if(event.target===this)closeStatus()">
   <div class="status-card-view" onclick="event.stopPropagation()">
     <div class="status-hdr" id="st-hdr"></div>
-    <div class="status-body" id="st-body" onclick="nextStatus()"></div>
+    <div class="status-body" id="st-body" onclick="statusTap(event)"></div>
     <div class="status-ftr" id="st-ftr"></div>
   </div>
 </div>
@@ -460,30 +477,83 @@ function load() {
   db.users = db.users || {};
   db.chats = db.chats || {};
   db.pres = db.pres || {};
-  db.status = (db.status || []).filter(s => Date.now() - s.t < 864e5);
+  db.status = db.status || [];
   ensureBot();
 }
 
 function save() {
-  if(store.set('chatku_db', JSON.stringify(db))) {
-    try { if(firebaseDb) firebaseDb.ref('hitler_app_db').set(JSON.stringify(db)); } catch(e) {}
-    return true;
-  }
-  toast('Penyimpanan penuh.'); return false;
+  store.set('chatku_db', JSON.stringify(db));
+  dirty = true; schedulePush();
+  return true;
 }
 
-if(firebaseDb) {
-  try {
-    firebaseDb.ref('hitler_app_db').on('value', snapshot => {
-      const data = snapshot.val();
-      if(data) {
-        store.set('chatku_db', data);
-        load();
-        if(me) { if(!enforceAccount()) return; scanTags(false); renderSide(); if(cur && db.chats[cur]) renderChat(); }
-      }
-    }, err => console.warn('Firebase listener error:', err));
-  } catch(e) { console.warn(e); }
+/* ===== SINKRONISASI DATA (merge 3-arah supaya data tidak saling menimpa) ===== */
+let SYNCED = false, syncWaiters = [], base = null, dirty = false, pushT = null, pushFail = 0, TOFF = 0;
+const eq = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+const isO = x => x && typeof x === 'object' && !Array.isArray(x);
+const idf = x => (x && typeof x === 'object') ? (x.id !== undefined ? 'i' + x.id : x.t !== undefined ? 'm' + x.f + '@' + x.t : JSON.stringify(x)) : 'p' + JSON.stringify(x);
+function mergeArr(b, l, r) {
+  b = Array.isArray(b) ? b : []; l = Array.isArray(l) ? l : []; r = Array.isArray(r) ? r : [];
+  const mb = new Map(b.map(x => [idf(x), x])), ml = new Map(l.map(x => [idf(x), x])), mr = new Map(r.map(x => [idf(x), x])), out = new Map();
+  mr.forEach((x, k) => { if(ml.has(k)) out.set(k, merge3(mb.get(k), ml.get(k), x)); else if(!mb.has(k)) out.set(k, x); });
+  ml.forEach((x, k) => { if(!mr.has(k) && !mb.has(k)) out.set(k, x); });
+  const res = [...out.values()];
+  if(res.length && res.every(x => x && typeof x === 'object' && typeof x.t === 'number')) res.sort((a, b) => a.t - b.t);
+  return res;
 }
+function merge3(b, l, r) {
+  if(eq(l, b)) return r;
+  if(eq(r, b)) return l;
+  if(eq(l, r)) return l;
+  if(Array.isArray(l) || Array.isArray(r)) return (Array.isArray(l || []) && Array.isArray(r || [])) ? mergeArr(b, l, r) : l;
+  if(isO(l) && isO(r)) {
+    const o = {}, bb = isO(b) ? b : {};
+    new Set([...Object.keys(l), ...Object.keys(r), ...Object.keys(bb)]).forEach(k => { const v = merge3(bb[k], l[k], r[k]); if(v !== undefined) o[k] = v; });
+    return o;
+  }
+  return l;
+}
+const waitSync = () => SYNCED ? Promise.resolve() : new Promise(r => syncWaiters.push(r));
+const setSynced = () => { if(SYNCED) return; SYNCED = true; syncWaiters.splice(0).forEach(f => f()); };
+function schedulePush() { if(!firebaseDb) return; clearTimeout(pushT); pushT = setTimeout(pushRemote, 200); }
+function pushRemote() {
+  if(!firebaseDb || !dirty) return;
+  if(!SYNCED) { waitSync().then(pushRemote); return; }
+  dirty = false;
+  let local; try { local = JSON.parse(store.get('chatku_db')); } catch(e) { return; }
+  const b = base;
+  firebaseDb.ref('hitler_app_db').transaction(curv => {
+    let remote = null; try { remote = curv ? JSON.parse(curv) : null; } catch(e) {}
+    return JSON.stringify(remote ? merge3(b, local, remote) : local);
+  }, (err) => {
+    if(err) { console.warn('Sync gagal:', err); if(++pushFail < 6) { dirty = true; setTimeout(pushRemote, 3000); } }
+    else pushFail = 0;
+  }, false);
+}
+if(firebaseDb) {
+  setTimeout(setSynced, 4000);
+  try { firebaseDb.ref('.info/serverTimeOffset').on('value', sn => { TOFF = sn.val() || 0; }); } catch(e) {}
+  try {
+    firebaseDb.ref('hitler_app_db').on('value', snap => {
+      const data = snap.val();
+      let remote = null; try { remote = data ? JSON.parse(data) : null; } catch(e) {}
+      if(remote) {
+        let local = null; try { local = JSON.parse(store.get('chatku_db')); } catch(e) {}
+        const merged = (dirty && local) ? merge3(base, local, remote) : remote;
+        base = remote;
+        store.set('chatku_db', JSON.stringify(merged));
+        if(dirty && !eq(merged, remote)) schedulePush();
+      } else if(store.get('chatku_db')) { dirty = true; schedulePush(); }
+      setSynced();
+      load();
+      if(me) {
+        if(!enforceAccount()) return;
+        if(cur && (!db.chats[cur] || !db.chats[cur].members.includes(me))) { closeChatUI(); toast('Kamu sudah tidak berada di obrolan ini'); }
+        scanTags(false); renderSide(); if(cur && db.chats[cur]) renderChat();
+      }
+    }, err => { console.warn('Firebase listener error:', err); setSynced(); });
+  } catch(e) { console.warn(e); setSynced(); }
+} else setSynced();
 
 function sha256hex(ascii) {
   function rr(v, a) { return (v >>> a) | (v << (32 - a)) }
@@ -551,7 +621,7 @@ function initAuthHandlers() {
   bindAuthSwitches();
   
   $('#go').onclick = async () => {
-    load();
+    await waitSync(); load();
     const e = $('#em').value.trim().toLowerCase();
     const u = $('#us').value.trim().toLowerCase();
     const p = $('#pw').value;
@@ -627,7 +697,7 @@ function tick(c, m) {
 
 function crow(c) {
   const v = c.msgs.filter(m => !(m.d || []).includes(me)), l = v[v.length - 1], n = cname(c), u = unread(c);
-  const p = l ? (l.x ? '🚫 Pesan dihapus' : (l.f === '!' ? '' : c.type === 'g' && l.f !== me ? '@' + l.f + ': ' : l.f === me ? 'Kamu: ' : '') + (l.text || ({ sm: '🏷 Tag status', v: '🎬 Video', a: '🎵 Musik', f: '📄 File', i: '📷 Foto' }[l.mt] || '📎 Media'))) : (c.type === 'g' ? c.members.length + ' anggota' : 'Belum ada pesan');
+  const p = l ? (l.x ? '🚫 Pesan dihapus' : (l.f === '!' ? '' : c.type === 'g' && l.f !== me ? '@' + l.f + ': ' : l.f === me ? 'Kamu: ' : '') + (l.text || ({ sm: '🏷 Tag status', v: '🎬 Video', a: '🎵 Musik', f: '📄 File', i: '📷 Foto', o: '👁 Foto 1x lihat' }[l.mt] || '📎 Media'))) : (c.type === 'g' ? c.members.length + ' anggota' : 'Belum ada pesan');
   return `<div class="row" data-c="${c.id}">${av(n, '', c.type === 'g' && c.pic ? { mt: 'i', src: c.pic } : null)}<div class="t"><b>${c.type === 'g' ? '👥 ' : '@'}${esc(n)}${c.type === 'g' ? '' : vb(n)}</b><small class="${u ? 'u' : ''}">${esc(p)}</small></div><div style="text-align:right"><small style="${u ? 'color:var(--green)' : ''}">${l ? hm(l.t) : ''}</small>${u ? `<br><span class="bd">${u}</span>` : ''}</div></div>`;
 }
 
@@ -653,10 +723,16 @@ function canSend() {
 const hm = t => new Date(t).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 
 function presSet(on) {
-  if(!me) return; load();
-  db.pres = db.pres || {};
-  db.pres[me] = { t: Date.now(), on: on ? 1 : 0 };
-  save();
+  if(!me) return;
+  if(firebaseDb) {
+    try {
+      const r = firebaseDb.ref('hitler_pres/' + me), ts = firebase.database.ServerValue.TIMESTAMP;
+      if(on) { r.onDisconnect().set({ on: 0, t: ts }); r.set({ on: 1, t: ts }); }
+      else { r.set({ on: 0, t: ts }); r.onDisconnect().cancel(); }
+    } catch(e) {}
+  }
+  PRES[me] = { on: on ? 1 : 0, t: nowS() };
+  try { localStorage.setItem('chatku_pres', JSON.stringify(PRES)); } catch(e) {}
 }
 
 function canSeeFeature(targetUser, featureKey) {
@@ -674,11 +750,10 @@ function canSeeFeature(targetUser, featureKey) {
 function presText(u) {
   if(BOTS.includes(u)) return { t: 'bot · selalu online', on: 1 };
   if(!canSeeFeature(u, 'online')) return null;
-  load();
-  const p = (db.pres || {})[u];
-  if(!p) return { t: 'Offline', on: 0 };
-  if(p.on && Date.now() - p.t < 35000) return { t: 'Online', on: 1 };
-  return { t: 'Terakhir dilihat ' + lsFmt(p.t), on: 0 };
+  const p = PRES[u];
+  if(!p || !p.t) return { t: 'Offline', on: 0 };
+  if(p.on && nowS() - p.t < 120000) return { t: 'Online', on: 1 };
+  return { t: 'Terakhir dilihat ' + fmtSeen(p.t), on: 0 };
 }
 
 const presHtml = u => { const x = presText(u); return x ? `<span class="${x.on ? 'onl' : ''}">${x.on ? '● ' : ''}${esc(x.t)}</span>` : ''; };
@@ -690,6 +765,7 @@ function hdrSub(c) {
     cm.innerHTML = c.members.length + ' anggota' + (on ? ' · <span class="onl">' + on + ' online</span>' : '');
   } else {
     const n = cname(c);
+    if(typing[c.id]) { cm.innerHTML = '<span class="onl">sedang mengetik…</span>'; return; }
     cm.innerHTML = presHtml(n) || (canSeeFeature(n, 'bio') ? esc(bioOf(n)) : '');
   }
 }
@@ -735,11 +811,11 @@ function renderSide() {
       </div>
     </div>`;
   } else {
-    const ss = db.status.filter(s => Date.now() - s.t < 864e5 && canSeeS(s)), by = {};
+    const ss = db.status.filter(s => canSeeS(s)), by = {};
     ss.forEach(s => (by[s.u] = by[s.u] || []).push(s));
-    h = `<div class="row" id="addst">${by[me] ? av(me, 'ring', by[me][by[me].length - 1]) : '<div class="av" style="background:var(--green)">+</div>'}<div class="t"><b>Status saya</b><small>${by[me] ? by[me].length + ' status · lihat' : 'Ketuk untuk tambah status'}</small></div></div><div class="sec">PEMBARUAN TERBARU</div>`;
+    h = `<div class="row" id="addst">${by[me] ? av(me, 'ring', ringTh(by[me][by[me].length - 1])) : '<div class="av" style="background:var(--green)">+</div>'}<div class="t"><b>Status saya</b><small>${by[me] ? by[me].length + ' status · lihat' : 'Ketuk untuk tambah status'}</small></div></div><div class="sec">PEMBARUAN TERBARU</div>`;
     const o = Object.keys(by).filter(u => u !== me);
-    h += o.length ? o.map(u => `<div class="row" data-s="${u}">${av(u, 'ring', by[u][by[u].length - 1])}<div class="t"><b>@${esc(u)}${vb(u)}</b><small>${by[u].length} status · ${hm(by[u][by[u].length - 1].t)}</small></div></div>`).join('') : '<div class="empty">Belum ada status</div>';
+    h += o.length ? o.map(u => `<div class="row" data-s="${u}">${av(u, 'ring', ringTh(by[u][by[u].length - 1]))}<div class="t"><b>@${esc(u)}${vb(u)}</b><small>${by[u].length} status · ${hm(by[u][by[u].length - 1].t)}</small></div></div>`).join('') : '<div class="empty">Belum ada status</div>';
   }
 
   L.innerHTML = h; warm();
@@ -784,7 +860,7 @@ $('#list').onclick = e => {
   if(r.id === 'newg') { $('#gm').hidden = false; $('#ge').textContent = ''; }
   else if(r.dataset.c) openChat(r.dataset.c);
   else if(r.dataset.s) viewS(r.dataset.s);
-  else { const mine = db.status.filter(s => s.u === me && Date.now() - s.t < 864e5); mine.length ? viewS(me) : $('#sf').click(); }
+  else { const mine = db.status.filter(s => s.u === me); mine.length ? viewS(me) : $('#sf').click(); }
 };
 
 function openChat(id) { 
@@ -817,8 +893,10 @@ function renderChat(bottom) {
     let lp; const MS = $('#msgs');
     MS.addEventListener('pointerdown', e => { const el = e.target.closest('.m'); if(el) lp = setTimeout(() => mmenu(+el.dataset.i), 500); });
     ['pointerup','pointerleave','pointermove','pointercancel'].forEach(v => MS.addEventListener(v, () => clearTimeout(lp)));
+    ['pause', 'ended'].forEach(v => MS.addEventListener(v, () => { if(MS._defer) setTimeout(() => { if(cur) renderChat(); }, 60); }, true));
     MS.addEventListener('click', e => {
       const a = e.target.closest('.ul'); if(a) { e.preventDefault(); return a.dataset.g ? joinCode(a.dataset.g) : openUser(a.dataset.un); }
+      const o1 = e.target.closest('.once.go'); if(o1) return openOnce(+o1.dataset.i);
       const t = e.target.closest('.vt,.im'); if(t) openMv(+t.dataset.i);
     });
     $('#at').onclick = e => { e.stopPropagation(); $('#ad').hidden = !$('#ad').hidden; };
@@ -834,63 +912,72 @@ function renderChat(bottom) {
   hdrSub(c);
 
   const B = $('#msgs'), near = bottom || B.scrollHeight - B.scrollTop - B.clientHeight < 80;
-  const HT = c.msgs.some(m => !(m.d || []).includes(me)) ? c.msgs.map((m, i) => (m.d || []).includes(me) ? '' : m.f === '!' ? `<div class="empty" style="padding:4px;font-size:12px">${esc(m.text)}</div>` : `<div class="m ${m.f === me ? 'me' : ''}" data-i="${i}">${c.type === 'g' && m.f !== me ? `<div class="n">@${esc(m.f)}${vb(m.f)}${isAdm(c, m.f) ? ' <small>· admin</small>' : ''}</div>` : ''}${m.x ? '<i style="opacity:.6">🚫 Pesan dihapus</i>' : mhtml(m, i) + (m.text ? lk(m.text) : '')}<small>${m.e && !m.x ? 'diedit · ' : ''}${hm(m.t)}${m.f === me ? tick(c, m) : ''}</small></div>`).join('') : '<div class="empty">Belum ada pesan 👋</div>';
+  const HT = c.msgs.some(m => !(m.d || []).includes(me)) ? c.msgs.map((m, i) => (m.d || []).includes(me) ? '' : m.f === '!' ? `<div class="empty" style="padding:4px;font-size:12px">${esc(m.text)}</div>` : `<div class="m ${m.f === me ? 'me' : ''}" data-i="${i}">${c.type === 'g' && m.f !== me ? `<div class="n">@${esc(m.f)}${vb(m.f)}${isAdm(c, m.f) ? ' <small>· admin</small>' : ''}</div>` : ''}${m.x ? '<i style="opacity:.6">🚫 Pesan dihapus</i>' : mhtml(m, i) + (m.text ? lk(m.text).replace(/\n/g, '<br>') : '')}<small>${m.e && !m.x ? 'diedit · ' : ''}${hm(m.t)}${m.f === me ? tick(c, m) : ''}</small></div>`).join('') : '<div class="empty">Belum ada pesan 👋</div>';
   
-  if(B._h !== HT) { B._h = HT; B.innerHTML = HT; hyd(B); }
+  const playing = [...B.querySelectorAll('audio,video')].some(x => !x.paused && !x.ended);
+  if(B._h !== HT) { if(playing) B._defer = 1; else { B._h = HT; B._defer = 0; B.innerHTML = HT; hyd(B); } }
   if(near) B.scrollTop = B.scrollHeight;
 }
 
-function push(m) { const c = db.chats[cur], g = { f: me, t: Date.now(), r: [], ...m }; c.msgs.push(g); if(save()) { renderSide(); renderChat(true); botWatch(c.id, g); } else c.msgs.pop(); }
+function push(m) { if(cur) pushTo(cur, m); }
 function send() { const t = $('#tx').value.trim(); if(!t || !cur || !canSend()) return; $('#tx').value = ''; push({ text: t }); }
 
 /* STATUS SYSTEM */
 $('#sf').onchange = async e => {
   const f = await takeFile(e.target); if(!f) return;
-  const mt = f.type.startsWith('video/') ? 'v' : f.type.startsWith('image/') ? 'i' : null;
-  if(!mt) return toast('Pilih foto atau video');
+  const mt = f.type.startsWith('video/') ? 'v' : f.type.startsWith('image/') ? 'i' : (f.type.startsWith('audio/') || /\.(mp3|m4a|wav|ogg|aac|flac|opus)$/i.test(f.name)) ? 'a' : null;
+  if(!mt) return toast('Pilih foto, video, atau musik');
   if(!canSend()) return;
+  let blob = f; if(mt === 'i') blob = await shrink(f);
+  if(mt === 'a' && !blob.type) blob = new Blob([f], { type: 'audio/mpeg' });
+  if(blob.size > MAXB) return toast('Ukuran maksimal 5 MB (file ini ' + (blob.size / 1048576).toFixed(1) + ' MB)');
   toast('Memproses status…');
-  const mediaData = await prep(f); if(!mediaData) return;
-  const mid = await mput(f).catch(() => null);
-  if(mid) urls.set(mid, mediaData.src);
-  load();
-  const st = { id: 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), u: me, t: Date.now(), mt, mid, src: mediaData.src, cap: '', views: [] };
-  db.status.push(st);
-  if(save()) { tab = 'status'; renderSide(); toast('Status diposting'); }
+  const mid = await mput(blob); urls.set(mid, URL.createObjectURL(blob));
+  try { await mup(mid, blob); } catch(err) { toast('Upload ke server gagal, status mungkin tidak terlihat orang lain'); }
+  addStatus({ mt, mid, fn: f.name });
 };
+function addStatus(o) {
+  load(); db.status.push({ id: 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), u: me, t: Date.now(), cap: '', views: [], ...o });
+  if(save()) { tab = 'status'; renderSide(); toast('Status diposting'); }
+}
+const ringTh = st => (st && st.mt === 'i' && (st.src || urls.get(st.mid))) ? st : null;
 
 let vs = [], vi = 0;
-async function viewS(u) { vs = visS(u); vi = 0; await Promise.all(vs.filter(x => x.mid).map(x => murl(x.mid))); if(vs.length) showS(); }
+async function viewS(u) { vs = visS(u); vi = 0; if(!vs.length) return; showS(); }
 
+const stFail = new Set();
 function showS() {
-  const s = vs[vi], V = $('#vw'); V.hidden = false;
-  const mediaSrc = s.src || urls.get(s.mid) || '';
-  
+  const s = vs[vi]; if(!s) return closeStatus();
+  const V = $('#vw'); V.hidden = false;
+  const src = s.src || (s.mid && urls.get(s.mid)) || '';
   if(s.u !== me) {
     load();
     const stObj = db.status.find(x => x.id === s.id || (x.u === s.u && x.t === s.t));
-    if(stObj) {
-      stObj.views = stObj.views || [];
-      if(!stObj.views.includes(me)) {
-        stObj.views.push(me);
-        save();
-      }
-    }
+    if(stObj) { stObj.views = stObj.views || []; if(!stObj.views.includes(me)) { stObj.views.push(me); save(); } }
   }
-
-  $('#st-hdr').innerHTML = `${av(s.u)}<div><b>@${esc(s.u)}</b><br><small>${hm(s.t)} · ${vi+1}/${vs.length}</small></div>`;
-  $('#st-body').innerHTML = s.mt === 'v' ? `<video src="${mediaSrc}" autoplay controls playsinline></video>` : `<img src="${mediaSrc}">`;
-  
-  let ftrHTML = `<p style="margin:4px 0">${esc(s.cap || '')}</p>`;
+  $('#st-hdr').innerHTML = `${av(s.u)}<div><b>@${esc(s.u)}</b><br><small>${hm(s.t)} · ${vi + 1}/${vs.length}</small></div><button class="stx" onclick="closeStatus()" title="Tutup">✕</button>`;
+  let body;
+  if(s.mid && !src) {
+    if(stFail.has(s.mid)) body = '<div class="empty" style="color:#fff">Media tidak ditemukan</div>';
+    else { body = '<div class="empty" style="color:#fff">⏳ Memuat…</div>'; murl(s.mid).then(u => { if(!u) stFail.add(s.mid); if(vs[vi] === s && !$('#vw').hidden) showS(); }); }
+  } else if(s.mt === 'v') body = `<video src="${src}" autoplay controls playsinline></video>`;
+  else if(s.mt === 'a') body = `<div class="st-au">🎵<b>${esc(s.fn || 'Musik')}</b><audio src="${src}" autoplay controls></audio></div>`;
+  else body = `<img src="${src}">`;
+  $('#st-body').innerHTML = body;
+  let ftr = `<p style="margin:4px 0">${esc(s.cap || '')}</p>`;
   if(s.u === me) {
-    const viewCount = (s.views || []).length;
-    ftrHTML += `<div class="status-views-btn" onclick="openViewsModal('${s.id}')">👁️ ${viewCount} Dilihat</div> `;
-    ftrHTML += `<button style="background:#e5484d;color:#fff;padding:4px 10px;border-radius:12px;font-size:12px;margin-left:6px;" onclick="delS(${vi})">🗑️ Hapus</button>`;
+    ftr += `<div class="status-views-btn" onclick="openViewsModal('${s.id}')">👁️ ${(s.views || []).length} Dilihat</div> `;
+    ftr += `<button style="background:#e5484d;color:#fff;padding:4px 10px;border-radius:12px;font-size:12px;margin-left:6px;" onclick="delS(${vi})">🗑️ Hapus</button>`;
   }
-  $('#st-ftr').innerHTML = ftrHTML;
+  $('#st-ftr').innerHTML = ftr;
 }
+function closeStatus() {
+  document.querySelectorAll('#vw audio,#vw video').forEach(m => { try { m.pause(); } catch(e) {} });
+  $('#st-body').innerHTML = ''; $('#vw').hidden = true; vs = []; vi = 0;
+}
+function statusTap(e) { if(e.target.closest('video,audio,.st-au')) return; nextStatus(); }
 
-function nextStatus() { vi++; vi < vs.length ? showS() : ($('#vw').hidden = true); }
+function nextStatus() { vi++; vi < vs.length ? showS() : closeStatus(); }
 
 function openViewsModal(sid) {
   load();
@@ -904,10 +991,12 @@ function openViewsModal(sid) {
 
 async function delS(i) {
   if(!await ask('Hapus status ini?', { ok: 'Hapus' })) return;
-  const s = vs[i]; if(s.mid) mdel(s.mid);
-  load(); db.status = db.status.filter(x => !(x.u === s.u && x.t === s.t)); save();
+  const s = vs[i]; if(!s) return;
+  document.querySelectorAll('#vw audio,#vw video').forEach(m => { try { m.pause(); } catch(e) {} });
+  if(s.mid) mdel(s.mid);
+  load(); db.status = db.status.filter(x => !(x.id === s.id || (x.u === s.u && x.t === s.t))); save();
   vs.splice(i, 1); if(vi >= vs.length) vi = vs.length - 1;
-  if(vs.length) showS(); else { $('#vw').hidden = true; }
+  if(vs.length) showS(); else closeStatus();
   renderSide();
 }
 
@@ -923,6 +1012,7 @@ function ask(t, o = {}) {
 }
 
 function uinfo(u) {
+  umUser = u;
   const x = db.users[u] || {}; $('#uav').innerHTML = av(u, 'big'); $('#unm').innerHTML = '@' + esc(u) + vb(u);
   $('#ubio').textContent = canSeeFeature(u, 'bio') ? bioOf(u) : 'Bio disembunyikan';
   $('#upr').innerHTML = presHtml(u);
@@ -946,34 +1036,68 @@ $('#wx').onclick = () => $('#wm').hidden = true;
 const idb = new Promise((ok, no) => { try { const q = indexedDB.open('chatku_media', 1); q.onupgradeneeded = () => q.result.createObjectStore('m'); q.onsuccess = () => ok(q.result); q.onerror = () => no(q.error); } catch(e) { no(e); } });
 const tx = async (mode, fn) => { const d = await idb; return new Promise((ok, no) => { const t = d.transaction('m', mode), q = fn(t.objectStore('m')); t.oncomplete = () => ok(q.result); t.onerror = () => no(t.error); }); };
 const mmem = new Map();
-const mput = async b => { const id = 'm' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); try { await tx('readwrite', s => s.put({ b, ty: b.type }, id)); } catch(e) { mmem.set(id, b); } return id; };
-const mdel = id => { mmem.delete(id); return tx('readwrite', s => s.delete(id)).catch(() => {}); };
+const mput = async (b, id) => { id = id || ('m' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7)); try { await tx('readwrite', s => s.put({ b, ty: b.type }, id)); } catch(e) { mmem.set(id, b); } return id; };
+const mdelLocal = id => { mmem.delete(id); return tx('readwrite', s => s.delete(id)).catch(() => {}); };
+const mdel = id => { try { if(firebaseDb) firebaseDb.ref('hitler_media/' + id).remove(); } catch(e) {} return mdelLocal(id); };
 const urls = new Map();
-async function murl(id) { if(urls.has(id)) return urls.get(id); try { let b = mmem.get(id); if(!b) { const r = await tx('readonly', s => s.get(id)); b = r && (r.b ? new Blob([r.b], { type: r.ty || r.b.type }) : r); } const u = b ? URL.createObjectURL(b) : ''; urls.set(id, u); return u; } catch(e) { urls.set(id, ''); return ''; } }
+const inflight = new Map();
+function murl(id) {
+  if(urls.get(id)) return Promise.resolve(urls.get(id));
+  if(inflight.has(id)) return inflight.get(id);
+  const pr = (async () => {
+    try {
+      let b = mmem.get(id);
+      if(!b) { try { const r = await tx('readonly', s => s.get(id)); b = r && (r.b ? new Blob([r.b], { type: r.ty || r.b.type }) : r); } catch(e) {} }
+      if(!b && firebaseDb) {
+        const sn = await firebaseDb.ref('hitler_media/' + id).once('value'), v = sn.val();
+        if(v) { b = dataUrlToBlob(v); try { await tx('readwrite', st => st.put({ b, ty: b.type }, id)); } catch(e) { mmem.set(id, b); } }
+      }
+      const u = b ? URL.createObjectURL(b) : ''; if(u) urls.set(id, u); return u;
+    } catch(e) { return ''; } finally { inflight.delete(id); }
+  })();
+  inflight.set(id, pr); return pr;
+}
 function hyd(root) { root.querySelectorAll('[data-mid]').forEach(async el => { const a = el.tagName === 'A' ? 'href' : 'src', c = el.getAttribute(a); if(c && c !== '#' && !c.startsWith('data:image/gif')) return; const u = await murl(el.dataset.mid); if(u) el.setAttribute(a, u); }); }
-function warm() { const ids = [...new Set(db.status.filter(s => s.mid && !urls.has(s.mid)).map(s => s.mid))]; if(ids.length) Promise.all(ids.map(murl)).then(() => renderSide()); }
+const warmFail = new Set();
+function warm() {
+  const ids = [...new Set(db.status.filter(s => s.mid && s.mt === 'i' && !urls.get(s.mid) && !warmFail.has(s.mid)).map(s => s.mid))].slice(0, 12);
+  if(ids.length && !warm._b) { warm._b = 1; Promise.all(ids.map(murl)).then(r => { warm._b = 0; ids.forEach(x => { if(!urls.get(x)) warmFail.add(x); }); if(r.some(Boolean)) renderSide(); }); }
+}
 
 function mhtml(m, i) {
-  const id = m.mid, u = m.src || urls.get(id) || '', d = id ? ` data-mid="${id}"` : '', sa = u ? ` src="${u}"` : '';
-  if(m.mt === 'v') return `<div class="vt" data-i="${i}"><video${d}${u ? ` src="${u}#t=0.1"` : ''} preload="metadata" muted></video><span>▶</span></div>`;
-  if(m.mt === 'a') return `<div class="au">🎵 <b>${esc(m.fn || 'Musik')}</b></div><audio controls preload="metadata" data-i="${i}"${d}${sa}></audio>`;
-  if(m.mt === 'f') return `<a class="fl"${d} href="${u || '#'}" download="${esc(m.fn || 'file')}">📄 <b>${esc(m.fn || 'File')}</b></a>`;
-  return `<img class="im" data-i="${i}"${d}${u ? sa : ' src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="'}>`;
+  const fw = m.fwd ? '<div class="fw">↪ Diteruskan</div>' : '';
+  if(!m.mt || m.mt === 'sm') return fw;
+  if(m.mt === 'o') {
+    if(m.f === me) return `<div class="once">👁 <span>Foto 1x lihat<span class="s">${(m.vo || []).length ? 'Sudah dibuka' : 'Belum dibuka'}</span></span></div>`;
+    if((m.vo || []).includes(me)) return '<div class="once done">👁 Foto sudah dibuka</div>';
+    return `<div class="once go" data-i="${i}">👁 <span><b>Foto 1x lihat</b><span class="s">Ketuk untuk membuka (hanya sekali)</span></span></div>`;
+  }
+  const id = m.mid, u = m.src || (id && urls.get(id)) || '', d = id ? ` data-mid="${id}"` : '', sa = u ? ` src="${u}"` : '';
+  if(m.mt === 'v') return fw + `<div class="vt" data-i="${i}"><video${d}${u ? ` src="${u}#t=0.1"` : ''} preload="metadata" muted playsinline></video><span>▶</span></div>`;
+  if(m.mt === 'a') return fw + `<div class="au">🎵 <b>${esc(m.fn || 'Musik')}</b></div><audio controls preload="metadata" data-i="${i}"${d}${sa}></audio>`;
+  if(m.mt === 'f') return fw + `<a class="fl"${d} href="${u || '#'}" download="${esc(m.fn || 'file')}">📄 <b>${esc(m.fn || 'File')}</b></a>`;
+  return fw + `<img class="im" data-i="${i}"${d}${u ? sa : ' src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="'}>`;
 }
 
 let mvOpen = false;
 async function openMv(i) {
-  const m = db.chats[cur].msgs[i]; if(!m || m.x || (!m.mid && !m.src)) return;
+  const m = db.chats[cur].msgs[i]; if(!m || m.x || (!m.mid && !m.src) || m.mt === 'o') return;
   const u = m.src || await murl(m.mid); if(!u) return toast('Media tidak ditemukan');
-  $('#mvt').textContent = '@' + m.f; $('#mvd').href = u; $('#mvc').innerHTML = m.mt === 'v' ? `<video src="${u}" controls autoplay></video>` : `<img src="${u}">`;
+  $('#mvt').textContent = '@' + m.f; const dl = $('#mvd'); dl.style.display = ''; dl.href = u; dl.setAttribute('download', m.fn || 'media');
+  $('#mvc').innerHTML = m.mt === 'v' ? `<video src="${u}" controls autoplay playsinline></video>` : `<img src="${u}">`;
   $('#mv').hidden = false; mvOpen = true;
 }
-function stopMedia() { document.querySelectorAll('audio,video').forEach(m => { try { m.pause(); } catch(e) {} }); $('#mv').hidden = true; mvOpen = false; }
+function stopMedia() {
+  document.querySelectorAll('audio,video').forEach(m => { try { m.pause(); } catch(e) {} });
+  $('#mvc').innerHTML = ''; $('#mv').hidden = true; mvOpen = false; $('#mvd').style.display = '';
+  const sb = $('#st-body'); if(sb) sb.innerHTML = ''; $('#vw').hidden = true;
+  if(onceOpen) finishOnce();
+}
 $('#mvb').onclick = stopMedia;
 
-function botWelcome() { if(me === BOT) return; load(); const id = 'p:' + [me, BOT].sort().join(':'); if(db.chats[id]) return; db.chats[id] = { id, type: 'p', members: [me, BOT], msgs: [{ f: BOT, t: Date.now(), r: [], text: 'Halo! Kirimkan link media sosial untuk mendownload.' }], created: Date.now() }; save(); }
 
-const PRIV_ITEMS = [['pic','🖼️ Foto Profil'], ['online','🟢 Online & Terakhir Dilihat'], ['bio','📝 Bio'], ['readReceipts','✔✔ verifikasi Biru (Tanda Dibaca)']];
+
+const PRIV_ITEMS = [['pic','🖼️ Foto Profil'], ['online','🟢 Online & Terakhir Dilihat'], ['bio','📝 Bio'], ['readReceipts','✔✔ Centang Biru (Tanda Dibaca)']];
 const PRIV_MODES = [['all','Tampilkan untuk semua'], ['except','Semua terkecuali…'], ['only','Hanya (pilih)…'], ['nobody','Tidak ada']];
 const privOf = (u, k) => { const p = (((db.users[u] || {}).priv) || {})[k] || {}; return { mode: p.mode || 'all', list: p.list || [] }; };
 const privSum = p => p.mode === 'all' ? 'Semua orang' : p.mode === 'nobody' ? 'Tidak ada' : (p.mode === 'except' ? 'Semua kecuali ' : 'Hanya ') + p.list.length + ' orang';
@@ -1066,7 +1190,7 @@ function ownerPanel() {
   const hasBadge = u => { const b = (db.users[u] || {}).badge; return b === undefined ? u === OWN : !!b; };
   const users = () => { load(); return Object.keys(db.users).filter(u => !BOTS.includes(u)).sort(); };
   const after = () => { renderSide(); if(cur && db.chats[cur]) renderChat(); };
-  const chipsOf = u => { const x = db.users[u] || {}; return (x.ban ? '<span class="ow-chip r">🚫 Banned</span>' : '') + (frz(u) ? `<span class="ow-chip y">🧊 Beku · ${fmtLeft(x.frz - Date.now())}</span>` : '') + (hasBadge(u) ? '<span class="ow-chip b">✔ verifikasi</span>' : '') + (u === OWN ? '<span class="ow-chip g">👑 Owner</span>' : ''); };
+  const chipsOf = u => { const x = db.users[u] || {}; return (x.ban ? '<span class="ow-chip r">🚫 Banned</span>' : '') + (frz(u) ? `<span class="ow-chip y">🧊 Beku · ${fmtLeft(x.frz - Date.now())}</span>` : '') + (hasBadge(u) ? '<span class="ow-chip b">✔ Centang</span>' : '') + (u === OWN ? '<span class="ow-chip g">👑 Owner</span>' : ''); };
   const shell = h => { d.innerHTML = `<div class="ow-box">${h}</div>`; };
 
   /* ---- daftar akun ---- */
@@ -1080,7 +1204,7 @@ function ownerPanel() {
     tu = null; sub = null; const us = users();
     const n = { t: us.length, b: us.filter(u => db.users[u].ban).length, f: us.filter(frz).length, c: us.filter(hasBadge).length };
     shell(`<div class="ow-hero"><button class="ow-x" id="ow-close">✕</button><div class="ow-shield">🛡️</div><h2>Panel Owner</h2><p>Kelola semua akun pengguna</p>
-      <div class="ow-stats"><div><b>${n.t}</b><span>Akun</span></div><div><b>${n.b}</b><span>Banned</span></div><div><b>${n.f}</b><span>Beku</span></div><div><b>${n.c}</b><span>verifikasi</span></div></div></div>
+      <div class="ow-stats"><div><b>${n.t}</b><span>Akun</span></div><div><b>${n.b}</b><span>Banned</span></div><div><b>${n.f}</b><span>Beku</span></div><div><b>${n.c}</b><span>Centang</span></div></div></div>
       <div class="ow-body"><input class="f-auth ow-search" id="ow-q" placeholder="🔍 Cari username..." value="${esc(q)}"><div id="ow-ul"></div></div>`);
     d.querySelector('#ow-close').onclick = () => d.remove();
     d.querySelector('#ow-q').oninput = e => { q = e.target.value.trim().toLowerCase().replace('@', ''); drawUsers(); };
@@ -1109,11 +1233,11 @@ function ownerPanel() {
     const passP = `<div class="ow-panel"><small>Masukkan password baru untuk @${esc(u)} (min. 6 karakter). Password langsung terganti.</small>
       <input class="f-auth" id="ow-np" type="text" placeholder="Password baru" autocomplete="off" style="margin-top:8px;border-radius:12px">
       <button class="btn-auth" id="ow-pgo" style="background:linear-gradient(135deg,#f59e0b,#ef4444)">🔑 Ganti Password</button></div>`;
-    const badgeP = `<div class="ow-panel"><div class="ow-pv" id="ow-pv"></div><small>Pilih warna verifikasi</small>
+    const badgeP = `<div class="ow-panel"><div class="ow-pv" id="ow-pv"></div><small>Pilih warna centang</small>
       <div class="ow-sws">${PAL.map(([n, c]) => `<button class="ow-sw" data-c="${c}" title="${n}" style="background:${c}"></button>`).join('')}</div>
       <div style="display:flex;align-items:center;gap:10px;margin:8px 0 12px"><small style="flex:1">🎨 Atau pilih warna bebas</small><input type="color" id="ow-cc" value="${color}" style="width:56px;height:36px;border:0;background:none;padding:0;cursor:pointer"></div>
-      <button class="btn-auth" id="ow-bgo" style="background:linear-gradient(135deg,#6366f1,#ec4899)">✔ Berikan verifikasi</button>
-      ${hasBadge(u) ? '<button class="btn-auth" id="ow-brm" style="background:var(--line);color:var(--txt);margin-top:8px;box-shadow:none">Hapus verifikasi</button>' : ''}</div>`;
+      <button class="btn-auth" id="ow-bgo" style="background:linear-gradient(135deg,#6366f1,#ec4899)">✔ Berikan Centang</button>
+      ${hasBadge(u) ? '<button class="btn-auth" id="ow-brm" style="background:var(--line);color:var(--txt);margin-top:8px;box-shadow:none">Hapus Centang</button>' : ''}</div>`;
 
     shell(`<div class="ow-hero"><button class="ow-back" id="ow-back">‹</button><button class="ow-x" id="ow-close">✕</button>
       <div class="ow-prof">${av(u, 'big')}<h2 style="margin:4px 0 0">@${esc(u)}${vb(u)}</h2><p>${esc(x.email || '')}</p></div></div>
@@ -1121,7 +1245,7 @@ function ownerPanel() {
       ${self ? '' : act('freeze', '🧊', 'Bekukan Akun', f ? 'Sedang beku · sisa ' + fmtLeft(x.frz - Date.now()) : 'Tidak bisa chat selama waktu tertentu', 'linear-gradient(135deg,#0ea5e9,#6366f1)', freezeP)}
       ${self ? '' : act('ban', x.ban ? '✅' : '🚫', x.ban ? 'Unban Akun' : 'Banned Akun', x.ban ? 'Akun sedang dibanned · ketuk untuk membuka' : 'Akun tidak bisa login & langsung keluar', x.ban ? 'linear-gradient(135deg,#22c55e,#14b8a6)' : 'linear-gradient(135deg,#ef4444,#b91c1c)')}
       ${act('pass', '🔑', 'Reset Password', 'Ganti password akun langsung', 'linear-gradient(135deg,#f59e0b,#ef4444)', passP)}
-      ${act('badge', '✔', 'Berikan verifikasi', hasBadge(u) ? 'Sudah punya verifikasi · ubah warna' : 'Pilih warna verifikasi sesukamu', 'linear-gradient(135deg,#6366f1,#ec4899)', badgeP)}
+      ${act('badge', '✔', 'Berikan Centang', hasBadge(u) ? 'Sudah punya centang · ubah warna' : 'Pilih warna centang sesukamu', 'linear-gradient(135deg,#6366f1,#ec4899)', badgeP)}
       ${self ? '' : act('delete', '🗑️', 'Hapus Akun', 'Hapus permanen akun beserta obrolannya', 'linear-gradient(135deg,#475569,#0f172a)')}</div>`);
 
     d.querySelector('#ow-close').onclick = () => d.remove();
@@ -1164,14 +1288,14 @@ function ownerPanel() {
       db.users[u].pass = hp; save(); toast('Password @' + u + ' berhasil diganti'); sub = null; detail();
     };
 
-    // verifikasi
+    // centang
     if(sub === 'badge') {
       paintBadge();
       d.querySelectorAll('.ow-sw').forEach(b => b.onclick = () => { color = b.dataset.c; paintBadge(); });
       d.querySelector('#ow-cc').oninput = e => { color = e.target.value; paintBadge(); };
-      d.querySelector('#ow-bgo').onclick = () => { load(); db.users[u].badge = color; save(); toast('verifikasi diberikan ke @' + u); after(); sub = null; detail(); };
+      d.querySelector('#ow-bgo').onclick = () => { load(); db.users[u].badge = color; save(); toast('Centang diberikan ke @' + u); after(); sub = null; detail(); };
       const brm = d.querySelector('#ow-brm');
-      if(brm) brm.onclick = () => { load(); db.users[u].badge = ''; save(); toast('verifikasi @' + u + ' dihapus'); after(); sub = null; detail(); };
+      if(brm) brm.onclick = () => { load(); db.users[u].badge = ''; save(); toast('Centang @' + u + ' dihapus'); after(); sub = null; detail(); };
     }
   };
 
@@ -1182,7 +1306,7 @@ async function takeFile(inp) { const f = inp.files && inp.files[0]; if(!f) { inp
 function profMenu() { $('#pf').click(); }
 $('#pf').onchange = async e => {
   const f = await takeFile(e.target); if(!f) return;
-  const b = await b2d(f); load(); db.users[me].pic = b;
+  if(!f.type.startsWith('image/')) return toast('Pilih file foto'); const b = await imgToDataURL(f, 256, .85); load(); db.users[me].pic = b;
   if(save()) { renderSide(); toast('Foto profil diperbarui'); }
 };
 
@@ -1190,7 +1314,7 @@ const lsFmt = t => new Date(t).toLocaleDateString('id-ID');
 const sidOf = s => s.id || s.u + '@' + s.t;
 function stvAllowed(o, v) { return true; }
 const canSeeS = (s, v = me) => true;
-const visS = u => db.status.filter(s => s.u === u && Date.now() - s.t < 864e5);
+const visS = u => db.status.filter(s => s.u === u);
 function scanTags() {}
 function prep(f) { return new Promise(ok => { const r = new FileReader(); r.onload = () => ok({ src: r.result }); r.readAsDataURL(f); }); }
 
@@ -1241,28 +1365,9 @@ function deleteChatForMe(id) {
 }
 
 /* ===== Menu pesan (tekan lama pesan) ===== */
-function mmenu(i) {
-  load(); const c = db.chats[cur], m = c && c.msgs[i];
-  if(!m || m.x || m.f === '!') return;
-  $('#mb2').innerHTML = `<button class="acct-btn" data-a="me" style="background:var(--bg)">🗑 Hapus untuk saya</button>
-    ${m.f === me ? '<button class="acct-btn" data-a="all" style="background:var(--bg)">🚫 Hapus untuk semua</button>' : ''}
-    <button class="acct-btn" data-a="x" style="background:var(--bg)">Batal</button>`;
-  $('#mm').hidden = false;
-  $('#mb2').onclick = e => {
-    const a = e.target.closest('[data-a]'); if(!a) return;
-    $('#mm').hidden = true; load();
-    const mm = db.chats[cur] && db.chats[cur].msgs[i]; if(!mm) return;
-    if(a.dataset.a === 'me') { mm.d = mm.d || []; if(!mm.d.includes(me)) mm.d.push(me); save(); renderSide(); renderChat(); }
-    else if(a.dataset.a === 'all') { mm.x = 1; mm.text = ''; delete mm.src; delete mm.mid; save(); renderSide(); renderChat(); }
-  };
-}
 
-function botWatch(id, g) {
-  const c = db.chats[id]; if(!c || BOTS.includes(g.f)) return;
-  const bots = c.members.filter(x => BOTS.includes(x)); if(!bots.length) return;
-  g.r = g.r || []; bots.forEach(b => { if(!g.r.includes(b)) g.r.push(b); });
-  save(); renderChat();
-}
+
+
 function openUser(un) { if(db.users[un]) uinfo(un); else toast('User tidak ditemukan'); }
 
 /* ===== Grup ===== */
@@ -1274,9 +1379,9 @@ $('#gc').onclick = () => {
   const names = [...new Set($('#gu').value.split(',').map(x => x.trim().toLowerCase().replace('@', '')).filter(x => x && x !== me))];
   const bad = names.find(x => !db.users[x]); if(bad) return ge.textContent = 'User @' + bad + ' tidak ditemukan';
   const id = 'g:' + code() + Date.now().toString(36);
-  db.chats[id] = { id, type: 'g', name: n, bio: $('#gbio').value.trim(), members: [me, ...names], admins: [me], code: gcode(), msgs: [{ f: '!', t: Date.now(), r: [], text: '@' + me + ' membuat grup' }], created: Date.now() };
+  db.chats[id] = { id, type: 'g', name: n, bio: $('#gbio').value.trim(), members: [me, ...names], admins: [me], owner: me, ...(gpic ? { pic: gpic } : {}), code: gcode(), msgs: [{ f: '!', t: Date.now(), r: [], text: '@' + me + ' membuat grup' }], created: Date.now() };
   if(!save()) return;
-  $('#gm').hidden = true; ['#gn', '#gbio', '#gu'].forEach(x => $(x).value = ''); openChat(id);
+  $('#gm').hidden = true; ['#gn', '#gbio', '#gu'].forEach(x => $(x).value = ''); gpic = null; $('#gmp').textContent = '📷'; openChat(id);
 };
 function joinCode(cd) {
   load(); const c = Object.values(db.chats).find(x => x.type === 'g' && x.code === cd);
@@ -1286,17 +1391,7 @@ function joinCode(cd) {
 }
 $('#gj').onclick = () => { const v = $('#gl').value.trim(), m = v.match(/([a-z0-9]{10})\s*$/i); joinCode(m ? m[1] : v); };
 
-function ginfo() {
-  load(); const c = db.chats[cur]; if(!c) return;
-  $('#gav').innerHTML = av(c.name, 'big', c.pic ? { mt: 'i', src: c.pic } : null);
-  $('#gt').textContent = c.name; $('#gbio_disp').textContent = c.bio || '';
-  $('#gc2').textContent = c.members.length + ' anggota';
-  $('#g_admin_opts').style.display = isAdm(c, me) ? 'block' : 'none';
-  $('#gpc').style.display = $('#gpd').style.display = 'none';
-  $('#lk').textContent = 'chme.group/' + c.code; $('#ae').textContent = '';
-  $('#mlist').innerHTML = c.members.map(u => `<div class="row">${av(u)}<div class="t"><b>@${esc(u)}${vb(u)}${isAdm(c, u) ? ' <small>· admin</small>' : ''}</b></div></div>`).join('');
-  $('#gi').hidden = false;
-}
+
 $('#gz').onclick = () => { $('#gi').hidden = true; };
 $('#ab').onclick = () => {
   load(); const c = db.chats[cur], u = $('#au').value.trim().toLowerCase().replace('@', '');
@@ -1319,12 +1414,351 @@ $('#ga').onclick = async () => {
   $('#main').innerHTML = '<div class="ph">Pilih chat atau cari username<br>untuk mulai mengobrol 💬</div>'; renderSide();
 };
 
-document.addEventListener('DOMContentLoaded', () => {
+
+/* ============ MEDIA: kirim foto / 1x lihat / video / musik / file ============ */
+const MAXB = 5 * 1024 * 1024;
+let PRES = {}, onceOpen = null, umUser = null, gpic = null, fwdMsg = null;
+try { PRES = JSON.parse(localStorage.getItem('chatku_pres') || '{}'); } catch(e) {}
+const typing = {};
+const nowS = () => Date.now() + TOFF;
+
+function dataUrlToBlob(du) {
+  const [h, d] = du.split(','), mime = (h.match(/:(.*?);/) || [])[1] || 'application/octet-stream', bin = atob(d), a = new Uint8Array(bin.length);
+  for(let i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i);
+  return new Blob([a], { type: mime });
+}
+async function mup(id, blob) {
+  if(!firebaseDb) return true;
+  const du = await b2d(blob);
+  await firebaseDb.ref('hitler_media/' + id).set(du);
+  return true;
+}
+function loadImg(f) { return new Promise((ok, no) => { const u = URL.createObjectURL(f), i = new Image(); i.onload = () => { URL.revokeObjectURL(u); ok(i); }; i.onerror = () => { URL.revokeObjectURL(u); no(new Error('img')); }; i.src = u; }); }
+async function shrink(f, max = 1280, q = .82) {
+  try {
+    const i = await loadImg(f); let w = i.naturalWidth, h = i.naturalHeight; const k = Math.min(1, max / Math.max(w, h)); w = Math.round(w * k); h = Math.round(h * k);
+    const c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').drawImage(i, 0, 0, w, h);
+    return (await new Promise(r => c.toBlob(r, 'image/jpeg', q))) || f;
+  } catch(e) { return f; }
+}
+async function imgToDataURL(f, max, q) { return b2d(await shrink(f, max, q)); }
+
+function pushTo(id, m) {
+  load(); const c = db.chats[id]; if(!c) return;
+  const g = { f: me, t: Date.now(), r: [], ...m }; c.msgs.push(g); save();
+  renderSide(); if(cur === id) renderChat(true);
+  botWatch(id, g);
+}
+
+$('#af').onchange = async e => {
+  const inp = e.target, k = inp.dataset.k || 'f', f = await takeFile(inp); if(!f) return;
+  const id0 = cur; if(!id0) return; $('#ad').hidden = true;
+  if(!canSend()) return;
+  if((k === 'i' || k === 'o') && !f.type.startsWith('image/')) return toast('Pilih file foto');
+  if(k === 'v' && !f.type.startsWith('video/')) return toast('Pilih file video');
+  if(k === 'a' && !(f.type.startsWith('audio/') || /\.(mp3|m4a|wav|ogg|aac|flac|opus)$/i.test(f.name))) return toast('Pilih file musik/audio');
+  let blob = f;
+  if(k === 'i' || k === 'o') blob = await shrink(f);
+  else if(!f.type) blob = new Blob([f], { type: k === 'a' ? 'audio/mpeg' : 'application/octet-stream' });
+  if(blob.size > MAXB) return toast('Ukuran maksimal 5 MB (file ini ' + (blob.size / 1048576).toFixed(1) + ' MB)');
+  toast('Mengirim…');
+  const mid = await mput(blob); urls.set(mid, URL.createObjectURL(blob));
+  try { await mup(mid, blob); } catch(err) { toast('Upload ke server gagal, penerima mungkin tidak bisa membuka file'); }
+  pushTo(id0, { mt: k, mid, fn: f.name, sz: f.size, ...(k === 'o' ? { once: 1 } : {}) });
+  if(k === 'o') { urls.delete(mid); mdelLocal(mid); }
+};
+
+async function openOnce(i) {
+  load(); const c = db.chats[cur], m = c && c.msgs[i];
+  if(!m || m.mt !== 'o' || m.f === me || m.x || (m.vo || []).includes(me)) return;
+  const u = await murl(m.mid); if(!u) return toast('Foto tidak ditemukan atau sudah dihapus');
+  load(); const c2 = db.chats[cur], m2 = c2 && c2.msgs.find(x => x.f === m.f && x.t === m.t); if(!m2) return;
+  m2.vo = m2.vo || []; if(!m2.vo.includes(me)) m2.vo.push(me); save();
+  onceOpen = { mid: m.mid, chat: c2.id, from: m.f, t: m.t };
+  $('#mvt').textContent = '👁 Foto 1x lihat · @' + m.f; $('#mvd').style.display = 'none';
+  $('#mvc').innerHTML = `<img src="${u}" draggable="false" oncontextmenu="return false" style="pointer-events:none">`;
+  $('#mv').hidden = false; mvOpen = true; renderChat();
+}
+function finishOnce() {
+  const o = onceOpen; onceOpen = null; if(!o) return;
+  try { const u = urls.get(o.mid); if(u) URL.revokeObjectURL(u); urls.delete(o.mid); mdelLocal(o.mid); } catch(e) {}
+  load(); const c = db.chats[o.chat], m = c && c.msgs.find(x => x.f === o.from && x.t === o.t);
+  if(m && c.members.filter(x => x !== m.f).every(x => (m.vo || []).includes(x))) { try { if(firebaseDb) firebaseDb.ref('hitler_media/' + o.mid).remove(); } catch(e) {} m.gone = 1; save(); }
+  if(cur) renderChat();
+}
+
+/* ============ PRESENCE (online / offline akurat) ============ */
+function fmtSeen(t) {
+  const d = new Date(t), n = new Date(), y = new Date(n); y.setDate(n.getDate() - 1);
+  if(d.toDateString() === n.toDateString()) return 'hari ini ' + hm(t);
+  if(d.toDateString() === y.toDateString()) return 'kemarin ' + hm(t);
+  return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', ...(d.getFullYear() !== n.getFullYear() ? { year: 'numeric' } : {}) }) + ' ' + hm(t);
+}
+function refreshPres() {
+  if(!me) return;
+  if(cur && db.chats[cur]) hdrSub(db.chats[cur]);
+  const um = $('#um'); if(um && !um.hidden && umUser) $('#upr').innerHTML = presHtml(umUser);
+  const mp = $('.mypr'); if(mp) mp.innerHTML = presHtml(me) || '⚪ Online disembunyikan';
+}
+if(firebaseDb) { try { firebaseDb.ref('hitler_pres').on('value', sn => { PRES = sn.val() || {}; refreshPres(); }); } catch(e) {} }
+else window.addEventListener('storage', e => { if(e.key === 'chatku_pres') { try { PRES = JSON.parse(e.newValue || '{}'); } catch(x) {} refreshPres(); } });
+setInterval(() => { if(me && !document.hidden) presSet(1); }, 25000);
+setInterval(refreshPres, 20000);
+document.addEventListener('visibilitychange', () => { if(me) presSet(document.hidden ? 0 : 1); });
+window.addEventListener('pagehide', () => { if(me) presSet(0); });
+window.addEventListener('beforeunload', () => { if(me) presSet(0); });
+
+function closeChatUI() {
+  stopMedia(); cur = null; $('#app').classList.remove('open'); $('#gi').hidden = true;
+  $('#main').innerHTML = '<div class="ph">Pilih chat atau cari username<br>untuk mulai mengobrol 💬</div>';
+}
+
+/* ============ MENU PESAN + TERUSKAN ============ */
+function mmenu(i) {
+  load(); const c = db.chats[cur], m = c && c.msgs[i];
+  if(!m || m.x || m.f === '!') return;
+  $('#mb2').innerHTML = `${m.mt !== 'o' ? '<button class="acct-btn" data-a="fwd" style="background:var(--bg)">↪️ Teruskan</button>' : ''}
+    ${m.text ? '<button class="acct-btn" data-a="cp" style="background:var(--bg)">📋 Salin teks</button>' : ''}
+    <button class="acct-btn" data-a="me" style="background:var(--bg)">🗑 Hapus untuk saya</button>
+    ${m.f === me ? '<button class="acct-btn" data-a="all" style="background:var(--bg)">🚫 Hapus untuk semua</button>' : ''}
+    <button class="acct-btn" data-a="x" style="background:var(--bg)">Batal</button>`;
+  $('#mm').hidden = false;
+  $('#mb2').onclick = e => {
+    const a = e.target.closest('[data-a]'); if(!a) return;
+    $('#mm').hidden = true; load();
+    const mm = db.chats[cur] && db.chats[cur].msgs[i]; if(!mm) return;
+    if(a.dataset.a === 'fwd') openFwd(mm);
+    else if(a.dataset.a === 'cp') { try { navigator.clipboard.writeText(mm.text); toast('Teks disalin'); } catch(x) { toast('Gagal menyalin'); } }
+    else if(a.dataset.a === 'me') { mm.d = mm.d || []; if(!mm.d.includes(me)) mm.d.push(me); save(); renderSide(); renderChat(); }
+    else if(a.dataset.a === 'all') { mm.x = 1; mm.text = ''; delete mm.src; delete mm.mid; save(); renderSide(); renderChat(); }
+  };
+}
+function openFwd(m) {
+  fwdMsg = { text: m.text, mt: m.mt, mid: m.mid, src: m.src, fn: m.fn, sz: m.sz };
+  $('#fwd_status').style.display = ['i', 'v', 'a'].includes(m.mt) ? '' : 'none';
+  $('#fwdlist').innerHTML = myChats().map(c => `<div class="row" data-c="${c.id}">${av(cname(c), '', c.type === 'g' && c.pic ? { mt: 'i', src: c.pic } : null)}<div class="t"><b>${c.type === 'g' ? '👥 ' : '@'}${esc(cname(c))}</b></div></div>`).join('') || '<div class="empty">Belum ada obrolan</div>';
+  $('#fwdm').hidden = false;
+}
+$('#fwdlist').onclick = e => {
+  const r = e.target.closest('[data-c]'); if(!r || !fwdMsg || !canSend()) return;
+  const m = { ...fwdMsg, fwd: 1 }; Object.keys(m).forEach(k => m[k] === undefined && delete m[k]);
+  $('#fwdm').hidden = true; pushTo(r.dataset.c, m); toast('Pesan diteruskan');
+};
+$('#fwd_status').onclick = () => {
+  if(!fwdMsg || !canSend()) return; const { mt, mid, src, fn } = fwdMsg; $('#fwdm').hidden = true;
+  addStatus({ mt, ...(mid ? { mid } : {}), ...(src ? { src } : {}), fn });
+};
+$('#fwdx').onclick = () => { $('#fwdm').hidden = true; };
+
+/* ============ GRUP: peran, admin, kick, nama & bio terpisah ============ */
+const ownerOf = c => c.owner && c.members.includes(c.owner) ? c.owner : ((c.admins || []).find(a => c.members.includes(a)) || c.members[0]);
+const roleOf = (c, u) => u === ownerOf(c) ? 'owner' : isAdm(c, u) ? 'admin' : 'member';
+const roleLbl = r => ({ owner: '👑 Pembuat grup', admin: '🛡️ Admin', member: 'Anggota' }[r]);
+const sysMsg = (c, text) => c.msgs.push({ f: '!', t: Date.now(), r: [], text });
+
+function ginfo() {
+  load(); const c = db.chats[cur]; if(!c) return;
+  const adm = isAdm(c, me), mr = roleOf(c, me);
+  $('#gav').innerHTML = av(c.name, 'big', c.pic ? { mt: 'i', src: c.pic } : null);
+  $('#gt').textContent = c.name; $('#gbio_disp').textContent = c.bio || 'Belum ada bio grup';
+  $('#gc2').innerHTML = c.members.length + ' anggota · Peran kamu: <b>' + roleLbl(mr) + '</b>';
+  $('#g_admin_opts').style.display = adm ? 'block' : 'none';
+  $('#gpc').style.display = $('#gpd').style.display = '';
+  $('#lk').textContent = 'chme.group/' + c.code; $('#ae').textContent = '';
+  const order = { owner: 0, admin: 1, member: 2 };
+  $('#mlist').innerHTML = [...c.members].sort((a, b) => order[roleOf(c, a)] - order[roleOf(c, b)]).map(u => { const r = roleOf(c, u); return `<div class="row" data-mu="${esc(u)}">${av(u)}<div class="t"><b>@${esc(u)}${vb(u)}${u === me ? ' <small>(kamu)</small>' : ''}</b></div><span class="rolepill ${r}">${roleLbl(r)}</span></div>`; }).join('');
+  $('#gi').hidden = false;
+}
+$('#mlist').onclick = e => { const r = e.target.closest('[data-mu]'); if(r) memberSheet(r.dataset.mu); };
+function memberSheet(u) {
+  load(); const c = db.chats[cur]; if(!c || !c.members.includes(u)) return;
+  const role = roleOf(c, u), self = u === me, canAct = isAdm(c, me) && !self && role !== 'owner';
+  const desc = self ? 'Kamu adalah ' + roleLbl(role).replace(/^\S+ /, '').toLowerCase() + ' di grup ini' :
+    role === 'owner' ? '@' + u + ' adalah pembuat grup, punya kendali penuh' :
+    role === 'admin' ? '@' + u + ' adalah admin: bisa mengubah info grup, menambah/menghapus admin, dan mengeluarkan anggota' :
+    '@' + u + ' adalah anggota biasa';
+  const st = 'background:var(--bg)';
+  $('#mb2').innerHTML = `<div style="padding:12px;text-align:center">${av(u, 'big')}<div style="font-weight:700;margin-top:6px">@${esc(u)}${vb(u)}</div>
+    <span class="rolepill ${role}" style="display:inline-block;margin-top:6px">${roleLbl(role)}</span>
+    <div style="color:var(--sub);font-size:12px;margin-top:6px">${esc(desc)}</div></div>
+    ${!self ? `<button class="acct-btn" data-a="prof" style="${st}">👤 Lihat profil</button>` : ''}
+    ${canAct ? (role === 'admin' ? `<button class="acct-btn" data-a="unadm" style="${st}">⬇️ Hapus dari admin</button>` : `<button class="acct-btn" data-a="adm" style="${st}">⬆️ Jadikan admin</button>`) + `<button class="acct-btn" data-a="kick" style="${st};color:#e5484d">🚫 Keluarkan dari grup</button>` : ''}
+    <button class="acct-btn" data-a="x" style="${st}">Tutup</button>`;
+  $('#mm').hidden = false;
+  $('#mb2').onclick = async e => {
+    const a = e.target.closest('[data-a]'); if(!a) return; $('#mm').hidden = true; const k = a.dataset.a;
+    if(k === 'prof') return uinfo(u);
+    if(k === 'x') return;
+    load(); const g = db.chats[cur]; if(!g || !isAdm(g, me) || u === ownerOf(g)) return toast('Tidak diizinkan');
+    if(k === 'adm' || k === 'unadm') {
+      g.admins = g.admins && g.admins.length ? g.admins : [g.members[0]];
+      if(k === 'adm') { if(!g.admins.includes(u)) g.admins.push(u); } else g.admins = g.admins.filter(x => x !== u);
+      sysMsg(g, '@' + u + (k === 'adm' ? ' dijadikan admin oleh @' : ' dihapus dari admin oleh @') + me);
+      save(); toast(k === 'adm' ? '@' + u + ' sekarang admin' : '@' + u + ' bukan admin lagi'); ginfo(); renderChat(); renderSide();
+    } else if(k === 'kick') {
+      if(!await ask('Keluarkan @' + u + ' dari grup?', { ok: 'Keluarkan' })) return;
+      load(); const g2 = db.chats[cur]; if(!g2) return;
+      g2.members = g2.members.filter(x => x !== u); g2.admins = (g2.admins || []).filter(x => x !== u);
+      sysMsg(g2, '@' + u + ' dikeluarkan oleh @' + me);
+      save(); toast('@' + u + ' dikeluarkan'); ginfo(); renderChat(); renderSide();
+    }
+  };
+}
+$('#gedit').onclick = async () => {
+  load(); const c = db.chats[cur]; if(!c || !isAdm(c, me)) return;
+  const v = await ask('Nama grup', { input: true, def: c.name, ok: 'Simpan' }); if(v === null || !v.trim()) return;
+  load(); const g = db.chats[cur]; if(!g) return; g.name = v.trim(); sysMsg(g, '@' + me + ' mengubah nama grup'); save(); ginfo(); renderChat(); renderSide(); toast('Nama grup diperbarui');
+};
+$('#gbed').onclick = async () => {
+  load(); const c = db.chats[cur]; if(!c || !isAdm(c, me)) return;
+  const v = await ask('Bio / deskripsi grup', { input: true, def: c.bio || '', ok: 'Simpan' }); if(v === null) return;
+  load(); const g = db.chats[cur]; if(!g) return; g.bio = v.trim(); sysMsg(g, '@' + me + ' mengubah bio grup'); save(); ginfo(); renderChat(); renderSide(); toast('Bio grup diperbarui');
+};
+$('#gpc').onclick = () => $('#gpf').click();
+$('#gpf').onchange = async e => {
+  const f = await takeFile(e.target); if(!f) return; if(!f.type.startsWith('image/')) return toast('Pilih file foto');
+  load(); const c = db.chats[cur]; if(!c || !isAdm(c, me)) return;
+  c.pic = await imgToDataURL(f, 256, .85); sysMsg(c, '@' + me + ' mengubah foto grup'); save(); ginfo(); renderChat(); renderSide();
+};
+$('#gpd').onclick = () => { load(); const c = db.chats[cur]; if(!c || !isAdm(c, me)) return; delete c.pic; save(); ginfo(); renderChat(); renderSide(); };
+$('#gmp').onclick = () => $('#gpf2').click();
+$('#gpf2').onchange = async e => {
+  const f = await takeFile(e.target); if(!f) return; if(!f.type.startsWith('image/')) return toast('Pilih file foto');
+  gpic = await imgToDataURL(f, 256, .85);
+  $('#gmp').innerHTML = `<img src="${gpic}" style="width:60px;height:60px;border-radius:50%;object-fit:cover">`;
+};
+
+/* ============ BOT: downloader, AI, customer service ============ */
+function botWelcome() {
+  if(BOTS.includes(me)) return; load(); let ch = false;
+  const W = {
+    botdownload: 'Halo! 📥 Kirimkan link video/foto dari TikTok, Instagram, Facebook, YouTube, atau Twitter/X, nanti aku unduhkan.',
+    botai: 'Halo! Aku Bot AI 🤖 Tanyakan apa saja atau ajak aku ngobrol ya!',
+    botcs: '🎧 Halo! Aku Customer Service. Ketik "menu" untuk bantuan, atau "lapor <pesan>" untuk menghubungi owner.'
+  };
+  BOTS.forEach(b => {
+    const id = 'p:' + [me, b].sort().join(':');
+    if(!db.chats[id]) { db.chats[id] = { id, type: 'p', members: [me, b], msgs: [{ f: b, t: Date.now(), r: [], text: W[b] }], created: Date.now() }; ch = true; }
+  });
+  if(ch) save();
+}
+function botSay(id, bot, m) {
+  load(); const c = db.chats[id]; if(!c) return;
+  c.msgs.push({ f: bot, t: Date.now(), r: [], ...m }); save(); renderSide(); if(cur === id) renderChat(true);
+}
+function botWatch(id, g) {
+  const c = db.chats[id]; if(!c || BOTS.includes(g.f)) return;
+  const bots = c.members.filter(x => BOTS.includes(x)); if(!bots.length) return;
+  g.r = g.r || []; bots.forEach(b => { if(!g.r.includes(b)) g.r.push(b); }); save(); if(cur === id) renderChat();
+  if(c.type !== 'p' || !g.text || g.mt) return;
+  setTimeout(() => botRespond(id, bots[0], g), 450);
+}
+async function botRespond(id, b, g) {
+  typing[id] = 1; if(cur === id && db.chats[id]) hdrSub(db.chats[id]);
+  try {
+    if(b === BOT) await botDL(id, g.text); else if(b === 'botai') await botAI(id, g.text); else await botCS(id, g.text);
+  } catch(e) { console.warn(e); botSay(id, b, { text: 'Maaf, terjadi kesalahan. Coba lagi ya 🙏' }); }
+  delete typing[id]; if(cur === id && db.chats[id]) hdrSub(db.chats[id]);
+}
+async function fx(url, opt = {}, ms = 15000) {
+  const ac = new AbortController(), t = setTimeout(() => ac.abort(), ms);
+  try { return await fetch(url, { ...opt, signal: ac.signal }); } finally { clearTimeout(t); }
+}
+
+// --- Downloader ---
+const DL_COBALT = ['https://api.cobalt.tools/'];   // endpoint kompatibel cobalt, silakan ganti/tambah
+const DL_HELP = '📥 Bot Downloader\nKirim link video/foto publik dari TikTok, Instagram, Facebook, YouTube, Twitter/X, dll. Contoh:\nhttps://vt.tiktok.com/xxxxx';
+async function dlResolve(url) {
+  let host = ''; try { host = new URL(url).hostname.replace(/^www\./, ''); } catch(e) { return null; }
+  if(host.endsWith('tiktok.com')) {
+    try {
+      const j = await (await fx('https://www.tikwm.com/api/?hd=1&url=' + encodeURIComponent(url))).json();
+      if(j && j.code === 0 && j.data) {
+        const d = j.data, items = [];
+        if(d.images && d.images.length) d.images.slice(0, 8).forEach(u => items.push({ type: 'image', url: u })); else items.push({ type: 'video', url: d.hdplay || d.play });
+        if(d.music) items.push({ type: 'audio', url: d.music, name: (d.music_info && d.music_info.title) || 'Musik TikTok' });
+        return { title: d.title || 'TikTok', items };
+      }
+    } catch(e) {}
+  }
+  for(const ep of DL_COBALT) {
+    try {
+      const j = await (await fx(ep, { method: 'POST', headers: { Accept: 'application/json', 'Content-Type': 'application/json' }, body: JSON.stringify({ url, videoQuality: '720' }) })).json();
+      if(['tunnel', 'redirect', 'stream'].includes(j.status) && j.url) return { title: j.filename || host, items: [{ type: /\.(mp3|m4a|ogg|wav)$/i.test(j.filename || '') ? 'audio' : 'video', url: j.url, name: j.filename }] };
+      if(j.status === 'picker' && j.picker) return { title: host, items: j.picker.slice(0, 6).map(p => ({ type: p.type === 'video' ? 'video' : 'image', url: p.url })) };
+    } catch(e) {}
+  }
+  return null;
+}
+async function botDL(id, text) {
+  const m = text.match(/https?:\/\/[^\s]+/i);
+  if(!m) return botSay(id, BOT, { text: DL_HELP });
+  const url = m[0].replace(/[),.]+$/, '');
+  botSay(id, BOT, { text: '⏳ Memproses link…' });
+  const res = await dlResolve(url);
+  if(!res || !res.items.length) return botSay(id, BOT, { text: '😔 Gagal mengunduh. Pastikan link publik dan valid, atau coba lagi nanti. (Layanan unduhan pihak ketiga kadang sedang sibuk.)' });
+  res.items.forEach((it, n) => botSay(id, BOT, { mt: it.type === 'video' ? 'v' : it.type === 'audio' ? 'a' : 'i', src: it.url, fn: it.name || (it.type === 'audio' ? 'Musik' : 'media'), ...(n === 0 && res.title ? { text: '✅ ' + String(res.title).slice(0, 200) } : {}) }));
+}
+
+// --- Bot AI ---
+function aiLocal(t) {
+  const s = t.toLowerCase().trim();
+  if(/^(hai|halo|hello|hi|hey|p|assalamualaikum)\b/.test(s)) return 'Halo @' + me + '! 👋 Ada yang bisa aku bantu?';
+  if(/jam berapa|pukul berapa/.test(s)) return '🕐 Sekarang pukul ' + new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+  if(/tanggal|hari apa|hari ini/.test(s)) return '📅 ' + new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const mm = s.replace(/,/g, '.').match(/^[\d\s+\-*/().%^x×÷]+$/);
+  if(mm && /\d/.test(s) && /[+\-*/x×÷^%]/.test(s)) { try { const e = s.replace(/x|×/g, '*').replace(/÷/g, '/').replace(/\^/g, '**'); const v = Function('"use strict";return (' + e + ')')(); if(isFinite(v)) return '🧮 Hasilnya: ' + v; } catch(e) {} }
+  if(/siapa (kamu|anda)|namamu/.test(s)) return 'Aku Bot AI, teman ngobrol di aplikasi ini 🤖';
+  if(/terima kasih|makasih|thanks|thx/.test(s)) return 'Sama-sama! 😊';
+  if(/jokes?|lelucon|lucu/.test(s)) { const J = ['Kenapa programmer suka gelap? Karena light attracts bugs 🐛', 'Kenapa ayam menyeberang jalan? Biar sampai ke seberang 🐔', 'Apa bedanya kamu dan WiFi? WiFi bikin nyaman kalau sinyalnya kuat 😄']; return J[Math.floor(Math.random() * J.length)]; }
+  if(/bantuan|help|bisa apa/.test(s)) return 'Aku bisa ngobrol, jawab pertanyaan, hitung matematika, kasih tahu jam/tanggal, dan cerita lelucon 😊';
+  return 'Maaf, layanan AI online sedang tidak tersedia, jadi aku hanya bisa menjawab hal dasar (sapaan, jam, tanggal, hitungan, lelucon). Coba lagi sebentar lagi ya 🙏';
+}
+async function botAI(id, text) {
+  load(); const c = db.chats[id];
+  const hist = c.msgs.filter(m => m.f !== '!' && m.text && !m.x && !(m.d || []).includes(me)).slice(-9).map(m => ({ role: BOTS.includes(m.f) ? 'assistant' : 'user', content: m.text }));
+  let ans = null;
+  try {
+    const r = await fx('https://text.pollinations.ai/openai', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model: 'openai', messages: [{ role: 'system', content: 'Kamu adalah Bot AI di aplikasi chat. Jawab singkat, ramah, dan membantu dalam bahasa Indonesia kecuali pengguna memakai bahasa lain.' }, ...hist] }) }, 20000);
+    if(r.ok) { const j = await r.json(); ans = j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content; }
+  } catch(e) {}
+  botSay(id, 'botai', { text: String(ans || aiLocal(text)).slice(0, 2000) });
+}
+
+// --- Customer Service ---
+const CS_MENU = '🎧 Customer Service\nBalas dengan angka atau kata kunci:\n1. Cara daftar & login\n2. Lupa password\n3. Akun dibanned / dibekukan\n4. Privasi & centang biru\n5. Grup (buat, admin, kick)\n6. Status & media\n7. Hubungi owner → ketik: lapor <pesan>';
+function csReply(t) {
+  const s = t.toLowerCase().trim();
+  if(/^(1|daftar|login|registrasi|masuk)\b/.test(s)) return '📝 Klik tab "Daftar", isi email, username (3-20 karakter huruf/angka/_) dan password minimal 6 karakter. Setelah itu login dengan username & password tersebut.';
+  if(/^(2|lupa|reset|password|sandi)\b/.test(s)) return '🔑 Password hanya bisa direset oleh owner. Ketik: lapor reset password @usernamemu — laporanmu akan diteruskan ke owner.';
+  if(/^(3|banned|ban|beku|bekukan|blokir)\b/.test(s)) return '🚫 Akun dibanned/dibekukan oleh owner. Beku akan otomatis berakhir sesuai waktu yang ditentukan. Untuk banding ketik: lapor <alasanmu>.';
+  if(/^(4|privasi|centang|biru|online|foto profil)\b/.test(s)) return '🔒 Buka tab Akun → Privasi Akun. Kamu bisa atur Foto Profil, Online, Bio, dan Centang Biru: untuk semua, semua kecuali, hanya orang tertentu, atau tidak ada.';
+  if(/^(5|grup|group|admin|kick)\b/.test(s)) return '👥 Tab Grup → Grup baru. Admin bisa mengubah nama/bio/foto, menambah anggota, menjadikan atau menghapus admin, dan mengeluarkan anggota (ketuk nama anggota di Info grup).';
+  if(/^(6|status|media|foto|video|musik|file)\b/.test(s)) return '📎 Tombol 📎 di chat untuk kirim foto, foto 1x lihat, video, musik, file (maks 5 MB). Status: tab Status → Status saya, bisa foto/video/musik dan tidak hilang kecuali kamu hapus.';
+  if(/^(menu|help|bantuan|halo|hai|hi|start|\/start)\b/.test(s)) return CS_MENU;
+  return 'Maaf, aku belum paham 🙏\n\n' + CS_MENU;
+}
+async function botCS(id, text) {
+  const lap = text.match(/^\s*(lapor|laporan|report)\s*[:\-]?\s*(.+)/is);
+  if(lap) {
+    load();
+    if(db.users.riyan) {
+      const oid = 'p:' + ['botcs', 'riyan'].sort().join(':');
+      if(!db.chats[oid]) db.chats[oid] = { id: oid, type: 'p', members: ['botcs', 'riyan'], msgs: [], created: Date.now() };
+      db.chats[oid].msgs.push({ f: 'botcs', t: Date.now(), r: [], text: '📩 Laporan dari @' + me + ':\n' + lap[2].trim() });
+      save();
+    }
+    return botSay(id, 'botcs', { text: '✅ Laporanmu sudah diteruskan ke owner. Terima kasih!' });
+  }
+  botSay(id, 'botcs', { text: csReply(text) });
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
   load();
   initAuthHandlers();
   let s0 = null;
   try { s0 = localStorage.getItem('chatku_me'); } catch(e) {}
-  if(s0 && db.users[s0] && !db.users[s0].ban) start(s0);
+  if(s0 && db.users[s0]) { await waitSync(); load(); if(db.users[s0] && !db.users[s0].ban) start(s0); }
 });
 </script>
 </body>
