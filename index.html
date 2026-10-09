@@ -219,6 +219,16 @@ input, textarea, select { font: inherit; color: inherit; }
 .sysm { line-height: 2; }
 .sy { display: inline-flex; align-items: center; background: var(--panel); border-radius: 20px; padding: 1px 8px 1px 2px; margin: 1px 2px; font-size: 12px; color: var(--txt); box-shadow: 0 1px 2px #0002; }
 .sy .av { margin: 0 4px 0 0; }
+#dg, #st-views-modal, #mm, #im, #um { z-index: 200; }
+#ts { z-index: 400; }
+.status-body { position: relative; }
+.stseg { position: absolute; top: 6px; left: 8px; right: 8px; display: flex; gap: 4px; z-index: 2; pointer-events: none; }
+.stseg i { flex: 1; height: 3px; border-radius: 3px; background: rgba(255,255,255,.3); }
+.stseg i.on { background: #fff; }
+.stn { position: absolute; top: 50%; transform: translateY(-50%); width: 38px; height: 38px; border-radius: 50%; background: rgba(0,0,0,.45); color: #fff; font-size: 24px; line-height: 1; z-index: 2; display: flex; align-items: center; justify-content: center; }
+.stn.l { left: 8px; } .stn.r { right: 8px; }
+.st-tx { width: 100%; min-height: 300px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 28px 22px; color: #fff; font-weight: 700; line-height: 1.35; overflow-wrap: anywhere; box-sizing: border-box; }
+.m { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
 .dlm { padding: 12px; border-radius: 12px; background: rgba(0,0,0,.08); border: 1px dashed var(--green); cursor: pointer; font-size: 13px; font-weight: 600; min-width: 190px; }
 .once.done { opacity: .6; font-style: italic; }
 .once .s { display: block; font-size: 11px; opacity: .7; }
@@ -483,7 +493,7 @@ function load() {
   db.users = db.users || {};
   db.chats = db.chats || {};
   db.pres = db.pres || {};
-  db.status = db.status || [];
+  db.status = (db.status || []).filter(x => !(db.sdel || []).includes(x.id));
   ensureBot();
 }
 
@@ -819,7 +829,7 @@ function renderSide() {
   } else {
     const ss = db.status.filter(s => canSeeS(s)), by = {};
     ss.forEach(s => (by[s.u] = by[s.u] || []).push(s));
-    h = `<div class="row" id="addst2"><div class="av" style="background:var(--green)">+</div><div class="t"><b>Tambah status</b><small>Pilih foto/video dari galeri</small></div></div><div class="row" id="addmusic"><div class="av" style="background:linear-gradient(135deg,#a855f7,#ec4899)">🎵</div><div class="t"><b>Status musik</b><small>Pilih file musik</small></div></div>${by[me] ? `<div class="row" id="addst">${av(me, 'ring', ringTh(by[me][by[me].length - 1]))}<div class="t"><b>Status saya</b><small>${by[me].length} status · lihat</small></div></div>` : ''}<div class="sec">PEMBARUAN TERBARU</div>`;
+    h = `<div class="row" id="addst2"><div class="av" style="background:var(--green)">+</div><div class="t"><b>Tambah status</b><small>Pilih foto/video dari galeri</small></div></div><div class="row" id="addmusic"><div class="av" style="background:linear-gradient(135deg,#a855f7,#ec4899)">🎵</div><div class="t"><b>Status musik</b><small>Pilih file musik</small></div></div><div class="row" id="addtext"><div class="av" style="background:linear-gradient(135deg,#6366f1,#ec4899)">✍️</div><div class="t"><b>Status teks</b><small>Ketik pesan sebagai status</small></div></div>${by[me] ? `<div class="row" id="addst">${av(me, 'ring', ringTh(by[me][by[me].length - 1]))}<div class="t"><b>Status saya</b><small>${by[me].length} status · lihat</small></div></div>` : ''}<div class="sec">PEMBARUAN TERBARU</div>`;
     const o = Object.keys(by).filter(u => u !== me);
     h += o.length ? o.map(u => `<div class="row" data-s="${u}">${av(u, 'ring', ringTh(by[u][by[u].length - 1]))}<div class="t"><b>@${esc(u)}${vb(u)}</b><small>${by[u].length} status · ${hm(by[u][by[u].length - 1].t)}</small></div></div>`).join('') : '<div class="empty">Belum ada status</div>';
   }
@@ -862,10 +872,11 @@ document.addEventListener('click', () => { $('#dd').hidden = true; });
 
 $('#list').onclick = e => {
   if(lpFired) { lpFired = false; return; }
-  const r = e.target.closest('[data-u],[data-c],[data-s],[data-sid],#addst,#addst2,#addmusic,#newg'); if(!r) return;
+  const r = e.target.closest('[data-u],[data-c],[data-s],[data-sid],#addst,#addst2,#addmusic,#addtext,#newg'); if(!r) return;
   if(r.id === 'newg') { $('#gm').hidden = false; $('#ge').textContent = ''; }
   else if(r.id === 'addst2') $('#sf').click();
   else if(r.id === 'addmusic') $('#sm').click();
+  else if(r.id === 'addtext') openTextStatus();
   else if(r.dataset.c) openChat(r.dataset.c);
   else if(r.dataset.s) viewS(r.dataset.s);
   else { const mine = db.status.filter(s => s.u === me); mine.length ? viewS(me) : $('#sf').click(); }
@@ -898,11 +909,18 @@ function renderChat(bottom) {
   if(!$('#msgs')) {
     M.innerHTML = `<div class="wl" id="wpl"></div><div class="wl" id="wpd"></div><div class="hd"><button class="ib bk" id="bk">←</button><div id="ca"></div><div class="who"><b id="cn"></b><small id="cm"></small></div><button class="ib" id="wb" title="Menu">⋮</button></div><div id="cd" hidden><button id="cw">🎨 Ubah wallpaper</button><button id="ci">ℹ️ Info</button></div><div id="msgs"></div><div class="comp"><button class="ib" id="at" title="Lampirkan">📎</button><input type="text" id="tx" placeholder="Ketik pesan" autocomplete="off"><button class="send" id="sd">➤</button></div><div id="ad" hidden><button data-k="i">📷 Foto</button><button data-k="o">👁 Foto 1x lihat</button><button data-k="v">🎬 Video</button><button data-k="a">🎵 Musik</button><button data-k="f">📄 File</button></div>`;
     $('#bk').onclick = () => { stopMedia(); $('#app').classList.remove('open'); cur = null; setTimeout(() => { if(!cur) M.innerHTML = '<div class="ph">Pilih chat atau cari username<br>untuk mulai mengobrol 💬</div>'; }, 350); };
-    let lp; const MS = $('#msgs');
-    MS.addEventListener('pointerdown', e => { const el = e.target.closest('.m'); if(el) lp = setTimeout(() => mmenu(+el.dataset.i), 500); });
-    ['pointerup','pointerleave','pointermove','pointercancel'].forEach(v => MS.addEventListener(v, () => clearTimeout(lp)));
+    let lp, lpx = 0, lpy = 0; const MS = $('#msgs'); MS._lp = 0;
+    MS.addEventListener('pointerdown', e => {
+      const el = e.target.closest('.m'); MS._lp = 0; if(!el || e.target.closest('audio')) return;
+      lpx = e.clientX; lpy = e.clientY; clearTimeout(lp);
+      lp = setTimeout(() => { MS._lp = 1; try { navigator.vibrate && navigator.vibrate(15); } catch(x) {} mmenu(+el.dataset.i); }, 450);
+    });
+    MS.addEventListener('pointermove', e => { if(Math.abs(e.clientX - lpx) > 10 || Math.abs(e.clientY - lpy) > 10) clearTimeout(lp); });
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach(v => MS.addEventListener(v, () => clearTimeout(lp)));
+    MS.addEventListener('contextmenu', e => { const el = e.target.closest('.m'); if(!el) return; e.preventDefault(); if(!MS._lp) { MS._lp = 1; mmenu(+el.dataset.i); } });
     ['pause', 'ended'].forEach(v => MS.addEventListener(v, () => { if(MS._defer) setTimeout(() => { if(cur) renderChat(); }, 60); }, true));
     MS.addEventListener('click', e => {
+      if(MS._lp) { MS._lp = 0; return; }
       const a = e.target.closest('.ul'); if(a) { e.preventDefault(); return a.dataset.g ? joinCode(a.dataset.g) : openUser(a.dataset.un); }
       const o1 = e.target.closest('.once.go'); if(o1) return openOnce(+o1.dataset.i);
       const dl = e.target.closest('.dlm'); if(dl) return fetchBig(dl.dataset.dl, dl);
@@ -974,22 +992,38 @@ function showS() {
   if(s.mid && !src) {
     if(stFail.has(s.mid)) body = '<div class="empty" style="color:#fff">Media tidak ditemukan</div>';
     else { body = '<div class="empty" style="color:#fff" id="stp">⏳ Memuat…</div>'; murl(s.mid, p => { const e = $('#stp'); if(e && vs[vi] === s) e.textContent = '⏳ Memuat ' + p + '%'; }).then(u => { if(!u) stFail.add(s.mid); if(vs[vi] === s && !$('#vw').hidden) showS(); }); }
-  } else if(s.mt === 'v') body = `<video src="${src}" autoplay controls playsinline></video>`;
-  else if(s.mt === 'a') body = `<div class="st-au">🎵<b>${esc(s.fn || 'Musik')}</b><audio src="${src}" autoplay controls></audio></div>`;
+  } else if(s.mt === 't') body = stTxHtml(s);
+  else if(s.mt === 'v') body = `<video src="${src}" autoplay controls playsinline onended="if(vi<vs.length-1)nextStatus()"></video>`;
+  else if(s.mt === 'a') body = `<div class="st-au">🎵<b>${esc(s.fn || 'Musik')}</b><audio src="${src}" autoplay controls onended="if(vi<vs.length-1)nextStatus()"></audio></div>`;
   else body = `<img src="${src}">`;
-  $('#st-body').innerHTML = body;
+  $('#st-body').innerHTML = body + stNav();
   let ftr = `<p style="margin:4px 0">${esc(s.cap || '')}</p>`;
   if(s.u === me) {
     ftr += `<div class="status-views-btn" onclick="openViewsModal('${s.id}')">👁️ ${(s.views || []).length} Dilihat</div> `;
     ftr += `<button style="background:#e5484d;color:#fff;padding:4px 10px;border-radius:12px;font-size:12px;margin-left:6px;" onclick="delS(${vi})">🗑️ Hapus</button>`;
   }
+  ftr += `<div style="margin-top:8px;display:flex;gap:8px;justify-content:center">${vi > 0 ? '<button onclick="prevStatus()" style="background:rgba(255,255,255,.15);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px">‹ Sebelumnya</button>' : ''}<button onclick="nextStatus()" style="background:rgba(255,255,255,.15);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px">${vi < vs.length - 1 ? 'Lewati ›' : 'Selesai ✓'}</button></div>`;
   $('#st-ftr').innerHTML = ftr;
 }
 function closeStatus() {
   document.querySelectorAll('#vw audio,#vw video').forEach(m => { try { m.pause(); } catch(e) {} });
   $('#st-body').innerHTML = ''; $('#vw').hidden = true; vs = []; vi = 0;
 }
-function statusTap(e) { if(e.target.closest('video,audio,.st-au')) return; nextStatus(); }
+function stNav() {
+  return `<div class="stseg">${vs.map((_, k) => `<i class="${k <= vi ? 'on' : ''}"></i>`).join('')}</div>`
+    + (vi > 0 ? '<button class="stn l" onclick="event.stopPropagation();prevStatus()" title="Sebelumnya">‹</button>' : '')
+    + (vi < vs.length - 1 ? '<button class="stn r" onclick="event.stopPropagation();nextStatus()" title="Berikutnya">›</button>' : '');
+}
+function prevStatus() { if(vi > 0) { vi--; showS(); } }
+function statusTap(e) {
+  if(e.target.closest('video,audio,.st-au,.stn')) return;
+  const r = $('#st-body').getBoundingClientRect();
+  (e.clientX - r.left < r.width * 0.3) ? prevStatus() : nextStatus();
+}
+document.addEventListener('keydown', e => {
+  if($('#vw').hidden) return;
+  if(e.key === 'ArrowRight') nextStatus(); else if(e.key === 'ArrowLeft') prevStatus(); else if(e.key === 'Escape') closeStatus();
+});
 
 function nextStatus() { vi++; vi < vs.length ? showS() : closeStatus(); }
 
@@ -1008,7 +1042,7 @@ async function delS(i) {
   const s = vs[i]; if(!s) return;
   document.querySelectorAll('#vw audio,#vw video').forEach(m => { try { m.pause(); } catch(e) {} });
   if(s.mid) mdel(s.mid);
-  load(); db.status = db.status.filter(x => !(x.id === s.id || (x.u === s.u && x.t === s.t))); save();
+  load(); db.sdel = db.sdel || []; if(s.id) db.sdel.push(s.id); db.status = db.status.filter(x => !(x.id === s.id || (x.u === s.u && x.t === s.t))); save();
   vs.splice(i, 1); if(vi >= vs.length) vi = vs.length - 1;
   if(vs.length) showS(); else closeStatus();
   renderSide();
@@ -1560,25 +1594,35 @@ function closeChatUI() {
 function mmenu(i) {
   load(); const c = db.chats[cur], m = c && c.msgs[i];
   if(!m || m.x || m.f === '!') return;
-  $('#mb2').innerHTML = `${m.mt !== 'o' ? '<button class="acct-btn" data-a="fwd" style="background:var(--bg)">↪️ Teruskan</button>' : ''}
-    ${m.text ? '<button class="acct-btn" data-a="cp" style="background:var(--bg)">📋 Salin teks</button>' : ''}
-    <button class="acct-btn" data-a="me" style="background:var(--bg)">🗑 Hapus untuk saya</button>
-    ${m.f === me ? '<button class="acct-btn" data-a="all" style="background:var(--bg)">🚫 Hapus untuk semua</button>' : ''}
-    <button class="acct-btn" data-a="x" style="background:var(--bg)">Batal</button>`;
+  const st = 'background:var(--bg)', canSt = m.mt !== 'o' && (['i', 'v', 'a'].includes(m.mt) || (!m.mt && m.text));
+  const prev = m.text ? esc(m.text.slice(0, 60)) : ({ i: '📷 Foto', v: '🎬 Video', a: '🎵 Musik', f: '📄 File', o: '👁 Foto 1x lihat' }[m.mt] || '');
+  $('#mb2').innerHTML = `<div style="padding:10px 12px;font-size:12px;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${prev}</div>
+    ${m.mt !== 'o' ? `<button class="acct-btn" data-a="fwd" style="${st}">↪️ Teruskan ke chat</button>` : ''}
+    ${canSt ? `<button class="acct-btn" data-a="fst" style="${st}">⭕ Teruskan ke status</button>` : ''}
+    ${m.text ? `<button class="acct-btn" data-a="cp" style="${st}">📋 Salin teks</button>` : ''}
+    <button class="acct-btn" data-a="me" style="${st}">🗑 Hapus untuk saya</button>
+    ${m.f === me ? `<button class="acct-btn" data-a="all" style="${st};color:#e5484d">🚫 Hapus untuk semua</button>` : ''}
+    <button class="acct-btn" data-a="x" style="${st}">Batal</button>`;
   $('#mm').hidden = false;
-  $('#mb2').onclick = e => {
+  $('#mb2').onclick = async e => {
     const a = e.target.closest('[data-a]'); if(!a) return;
     $('#mm').hidden = true; load();
     const mm = db.chats[cur] && db.chats[cur].msgs[i]; if(!mm) return;
-    if(a.dataset.a === 'fwd') openFwd(mm);
-    else if(a.dataset.a === 'cp') { try { navigator.clipboard.writeText(mm.text); toast('Teks disalin'); } catch(x) { toast('Gagal menyalin'); } }
-    else if(a.dataset.a === 'me') { mm.d = mm.d || []; if(!mm.d.includes(me)) mm.d.push(me); save(); renderSide(); renderChat(); }
-    else if(a.dataset.a === 'all') { mm.x = 1; mm.text = ''; delete mm.src; delete mm.mid; save(); renderSide(); renderChat(); }
+    const k = a.dataset.a;
+    if(k === 'fwd') openFwd(mm);
+    else if(k === 'fst') { if(canSend()) postFwdStatus(mm); }
+    else if(k === 'cp') { try { navigator.clipboard.writeText(mm.text); toast('Teks disalin'); } catch(x) { toast('Gagal menyalin'); } }
+    else if(k === 'me') { mm.d = mm.d || []; if(!mm.d.includes(me)) mm.d.push(me); save(); renderSide(); renderChat(); toast('Pesan dihapus untuk kamu'); }
+    else if(k === 'all') {
+      if(!await ask('Hapus pesan ini untuk semua orang?', { ok: 'Hapus' })) return;
+      load(); const m2 = db.chats[cur] && db.chats[cur].msgs[i]; if(!m2) return;
+      m2.x = 1; m2.text = ''; delete m2.src; delete m2.mid; save(); renderSide(); renderChat(); toast('Pesan dihapus untuk semua');
+    }
   };
 }
 function openFwd(m) {
   fwdMsg = { text: m.text, mt: m.mt, mid: m.mid, src: m.src, fn: m.fn, sz: m.sz };
-  $('#fwd_status').style.display = ['i', 'v', 'a'].includes(m.mt) ? '' : 'none';
+  $('#fwd_status').style.display = (['i', 'v', 'a'].includes(m.mt) || (!m.mt && m.text)) ? '' : 'none';
   $('#fwdlist').innerHTML = myChats().map(c => `<div class="row" data-c="${c.id}">${av(cname(c), '', c.type === 'g' && c.pic ? { mt: 'i', src: c.pic } : null)}<div class="t"><b>${c.type === 'g' ? '👥 ' : '@'}${esc(cname(c))}</b></div></div>`).join('') || '<div class="empty">Belum ada obrolan</div>';
   $('#fwdm').hidden = false;
 }
@@ -1587,10 +1631,34 @@ $('#fwdlist').onclick = e => {
   const m = { ...fwdMsg, fwd: 1 }; Object.keys(m).forEach(k => m[k] === undefined && delete m[k]);
   $('#fwdm').hidden = true; pushTo(r.dataset.c, m); toast('Pesan diteruskan');
 };
-$('#fwd_status').onclick = () => {
-  if(!fwdMsg || !canSend()) return; const { mt, mid, src, fn } = fwdMsg; $('#fwdm').hidden = true;
+const TXT_BG = ['linear-gradient(135deg,#6366f1,#ec4899)', 'linear-gradient(135deg,#0ea5e9,#22c55e)', 'linear-gradient(135deg,#f97316,#ef4444)', 'linear-gradient(135deg,#a855f7,#3b82f6)', 'linear-gradient(135deg,#14b8a6,#0f172a)', 'linear-gradient(135deg,#f59e0b,#d946ef)', 'linear-gradient(135deg,#111827,#374151)', 'linear-gradient(135deg,#22c55e,#065f46)'];
+const txFs = n => n <= 40 ? 28 : n <= 120 ? 22 : 17;
+const stTxHtml = st => `<div class="st-tx" style="background:${TXT_BG[st.bg] || TXT_BG[0]};font-size:${txFs((st.text || '').length)}px">${esc(st.text || '').replace(/\n/g, '<br>')}</div>`;
+function openTextStatus() {
+  if(!canSend()) return;
+  const d = document.createElement('div'); d.className = 'ov'; d.style.zIndex = 200; document.body.appendChild(d);
+  let bg = Math.floor(Math.random() * TXT_BG.length);
+  d.innerHTML = `<div class="md" style="max-width:380px;max-height:92vh;overflow:auto"><h3>✍️ Status Teks</h3>
+    <div id="tsp" class="st-tx" style="border-radius:14px;min-height:190px"></div>
+    <textarea id="tst" class="f-auth" rows="3" maxlength="700" placeholder="Ketik status…" style="margin-top:10px;border-radius:12px;resize:none"></textarea>
+    <div class="ow-sws" id="tsw" style="margin:8px 0">${TXT_BG.map((g, k) => `<button class="ow-sw" data-k="${k}" style="background:${g}"></button>`).join('')}</div>
+    <button class="btn-auth" id="tsg">Posting Status</button>
+    <button class="btn-auth" id="tsc" style="background:var(--line);color:var(--txt);margin-top:8px;box-shadow:none">Batal</button></div>`;
+  const ta = d.querySelector('#tst'), pv = d.querySelector('#tsp');
+  const paint = () => { const t = ta.value; pv.style.background = TXT_BG[bg]; pv.style.fontSize = txFs(t.length) + 'px'; pv.style.opacity = t ? 1 : .6; pv.textContent = t || 'Ketik status…'; pv.style.whiteSpace = 'pre-wrap'; d.querySelectorAll('.ow-sw').forEach(b => b.classList.toggle('on', +b.dataset.k === bg)); };
+  ta.oninput = paint; paint(); setTimeout(() => ta.focus(), 80);
+  d.querySelectorAll('.ow-sw').forEach(b => b.onclick = () => { bg = +b.dataset.k; paint(); });
+  d.querySelector('#tsc').onclick = () => d.remove();
+  d.onclick = e => { if(e.target === d) d.remove(); };
+  d.querySelector('#tsg').onclick = () => { const t = ta.value.trim(); if(!t) return toast('Ketik sesuatu dulu'); if(!canSend()) return; addStatus({ mt: 't', text: t.slice(0, 700), bg }); d.remove(); };
+}
+function postFwdStatus(m) {
+  if(!m.mt && m.text) return addStatus({ mt: 't', text: m.text.slice(0, 700), bg: Math.floor(Math.random() * TXT_BG.length) });
+  const { mt, mid, src, fn } = m;
   addStatus({ mt, ...(mid ? { mid } : {}), ...(src ? { src } : {}), fn });
-};
+}
+$('#fwd_status').onclick = () => { if(!fwdMsg || !canSend()) return; $('#fwdm').hidden = true; postFwdStatus(fwdMsg); };
+
 $('#fwdx').onclick = () => { $('#fwdm').hidden = true; };
 
 /* ============ GRUP: peran, admin, kick, nama & bio terpisah ============ */
