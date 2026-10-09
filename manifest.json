@@ -1,41 +1,24 @@
 {
-  "background_color": "rgb(0, 0, 0)",
-  "dir": "ltr",
-  "display": "standalone",
-  "name": "hitlerapps",
-  "orientation": "portrait",
+  "id": "hitlerapp",
+  "name": "Hitler App",
+  "short_name": "HitlerApp",
+  "description": "Aplikasi obrolan dan kirim pesan di HitlerApp",
+  "start_url": "/",
   "scope": "/",
-  "short_name": "hitlerapp",
-  "start_url": "/index.html",
-  "theme_color": "#4f8f8b",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b141a",
+  "theme_color": "#00a884",
+  "dir": "ltr",
+  "categories": [
+    "social"
+  ],
   "icons": [
     {
-      "src": "data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'&gt;&lt;rect width='100' height='100' rx='22' fill='%230f0f1b'/&gt;&lt;rect x='5' y='5' width='90' height='90' rx='18' fill='none' stroke='%2300d2ff' stroke-width='3' filter='drop-shadow(0 0 6px %2300d2ff)'/&gt;&lt;path d='M25 28v44M45 28v44M25 50h20' stroke='%2300d2ff' stroke-width='7' stroke-linecap='round' stroke-linejoin='round' filter='drop-shadow(0 0 5px %2300d2ff)' fill='none'/&gt;&lt;path d='M55 72L67 28l12 44M59 58h16' stroke='%23ff2a8d' stroke-width='7' stroke-linecap='round' stroke-linejoin='round' filter='drop-shadow(0 0 5px %23ff2a8d)' fill='none'/&gt;&lt;/svg&gt;",
-      "isSquare": false,
-      "isPng": false,
-      "isWebp": false,
-      "isJpg": false,
-      "width": 0,
-      "is512x512": false,
-      "is256x256": false,
-      "is192x192": false
-    },
-    {
-      "src": "https://hitlerapps.netlify.app/favicon.ico",
-      "type": "image/x-icon",
-      "isSquare": false,
-      "isPng": false,
-      "isWebp": false,
-      "isJpg": false,
-      "width": 0,
-      "is512x512": false,
-      "is256x256": false,
-      "is192x192": false
+      "src": "https://cdn-icons-png.flaticon.com/512/732/732200.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
     }
-  ],
-  "id": "hitlerapps",
-  "description": "aplikasi obrolan dan kirim pesan di hittlerApss",
-  "categories": [
-    "social networking"
   ]
 }
