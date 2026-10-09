@@ -215,6 +215,10 @@ input, textarea, select { font: inherit; color: inherit; }
 /* MEDIA / ONCE / ROLE */
 .once { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 12px; background: rgba(0,0,0,.08); font-size: 14px; }
 .once.go { cursor: pointer; background: linear-gradient(135deg, #6366f122, #ec489922); border: 1px dashed var(--green); }
+.av.xs { width: 22px; height: 22px; font-size: 11px; display: inline-flex; vertical-align: middle; margin: 0 4px 0 2px; }
+.sysm { line-height: 2; }
+.sy { display: inline-flex; align-items: center; background: var(--panel); border-radius: 20px; padding: 1px 8px 1px 2px; margin: 1px 2px; font-size: 12px; color: var(--txt); box-shadow: 0 1px 2px #0002; }
+.sy .av { margin: 0 4px 0 0; }
 .dlm { padding: 12px; border-radius: 12px; background: rgba(0,0,0,.08); border: 1px dashed var(--green); cursor: pointer; font-size: 13px; font-weight: 600; min-width: 190px; }
 .once.done { opacity: .6; font-style: italic; }
 .once .s { display: block; font-size: 11px; opacity: .7; }
@@ -917,7 +921,7 @@ function renderChat(bottom) {
   hdrSub(c);
 
   const B = $('#msgs'), near = bottom || B.scrollHeight - B.scrollTop - B.clientHeight < 80;
-  const HT = c.msgs.some(m => !(m.d || []).includes(me)) ? c.msgs.map((m, i) => (m.d || []).includes(me) ? '' : m.f === '!' ? `<div class="empty" style="padding:4px;font-size:12px">${esc(m.text)}</div>` : `<div class="m ${m.f === me ? 'me' : ''}" data-i="${i}">${c.type === 'g' && m.f !== me ? `<div class="n">@${esc(m.f)}${vb(m.f)}${isAdm(c, m.f) ? ' <small>· admin</small>' : ''}</div>` : ''}${m.x ? '<i style="opacity:.6">🚫 Pesan dihapus</i>' : mhtml(m, i) + (m.text ? lk(m.text).replace(/\n/g, '<br>') : '')}<small>${m.e && !m.x ? 'diedit · ' : ''}${hm(m.t)}${m.f === me ? tick(c, m) : ''}</small></div>`).join('') : '<div class="empty">Belum ada pesan 👋</div>';
+  const HT = c.msgs.some(m => !(m.d || []).includes(me)) ? c.msgs.map((m, i) => (m.d || []).includes(me) ? '' : m.f === '!' ? `<div class="empty sysm" style="padding:4px;font-size:12px">${sysHtml(m.text)}</div>` : `<div class="m ${m.f === me ? 'me' : ''}" data-i="${i}">${c.type === 'g' && m.f !== me ? `<div class="n">@${esc(m.f)}${vb(m.f)}${isAdm(c, m.f) ? ' <small>· admin</small>' : ''}</div>` : ''}${m.x ? '<i style="opacity:.6">🚫 Pesan dihapus</i>' : mhtml(m, i) + (m.text ? lk(m.text).replace(/\n/g, '<br>') : '')}<small>${m.e && !m.x ? 'diedit · ' : ''}${hm(m.t)}${m.f === me ? tick(c, m) : ''}</small></div>`).join('') : '<div class="empty">Belum ada pesan 👋</div>';
   
   const playing = [...B.querySelectorAll('audio,video')].some(x => !x.paused && !x.ended);
   if(B._h !== HT) { if(playing) B._defer = 1; else { B._h = HT; B._defer = 0; B.innerHTML = HT; hyd(B); } }
@@ -1411,7 +1415,7 @@ $('#gc').onclick = () => {
 function joinCode(cd) {
   load(); const c = Object.values(db.chats).find(x => x.type === 'g' && x.code === cd);
   if(!c) return toast('Link grup tidak valid');
-  if(!c.members.includes(me)) { c.members.push(me); c.msgs.push({ f: '!', t: Date.now(), r: [], text: '@' + me + ' bergabung' }); save(); }
+  if(!c.members.includes(me)) { c.members.push(me); c.msgs.push({ f: '!', t: Date.now(), r: [], text: '@' + me + ' bergabung ke grup' }); save(); }
   $('#gm').hidden = true; openChat(c.id);
 }
 $('#gj').onclick = () => { const v = $('#gl').value.trim(), m = v.match(/([a-z0-9]{10})\s*$/i); joinCode(m ? m[1] : v); };
@@ -1422,7 +1426,7 @@ $('#ab').onclick = () => {
   load(); const c = db.chats[cur], u = $('#au').value.trim().toLowerCase().replace('@', '');
   if(!c || !u) return; if(!db.users[u]) return $('#ae').textContent = 'User tidak ditemukan';
   if(c.members.includes(u)) return $('#ae').textContent = 'Sudah menjadi anggota';
-  c.members.push(u); c.msgs.push({ f: '!', t: Date.now(), r: [], text: '@' + u + ' ditambahkan' }); save(); $('#au').value = ''; ginfo(); renderChat(); renderSide();
+  c.members.push(u); c.msgs.push({ f: '!', t: Date.now(), r: [], text: '@' + me + ' menambahkan @' + u + ' ke grup' }); save(); $('#au').value = ''; ginfo(); renderChat(); renderSide();
 };
 $('#cp').onclick = () => { const t = $('#lk').textContent; try { navigator.clipboard.writeText(t); toast('Link disalin'); } catch(e) { toast(t); } };
 $('#gr').onclick = () => { load(); const c = db.chats[cur]; if(!c) return; c.code = gcode(); save(); ginfo(); toast('Link direset'); };
@@ -1434,7 +1438,7 @@ $('#ga').onclick = async () => {
   if(!await ask('Keluar dari grup ini?', { ok: 'Keluar' })) return;
   load(); const c = db.chats[cur]; if(!c) return;
   c.members = c.members.filter(x => x !== me); c.admins = (c.admins || []).filter(x => x !== me);
-  if(!c.members.length) delete db.chats[cur]; else { if(!c.admins.length) c.admins = [c.members[0]]; c.msgs.push({ f: '!', t: Date.now(), r: [], text: '@' + me + ' keluar' }); }
+  if(!c.members.length) delete db.chats[cur]; else { if(!c.admins.length) c.admins = [c.members[0]]; c.msgs.push({ f: '!', t: Date.now(), r: [], text: '@' + me + ' keluar dari grup' }); }
   save(); $('#gi').hidden = true; cur = null; $('#app').classList.remove('open');
   $('#main').innerHTML = '<div class="ph">Pilih chat atau cari username<br>untuk mulai mengobrol 💬</div>'; renderSide();
 };
@@ -1593,6 +1597,7 @@ $('#fwdx').onclick = () => { $('#fwdm').hidden = true; };
 const ownerOf = c => c.owner && c.members.includes(c.owner) ? c.owner : ((c.admins || []).find(a => c.members.includes(a)) || c.members[0]);
 const roleOf = (c, u) => u === ownerOf(c) ? 'owner' : isAdm(c, u) ? 'admin' : 'member';
 const roleLbl = r => ({ owner: '👑 Pembuat grup', admin: '🛡️ Admin', member: 'Anggota' }[r]);
+const sysHtml = t => esc(t).replace(/@([a-z0-9_]{3,20})/gi, (a, u) => { u = u.toLowerCase(); return db.users[u] ? `<span class="sy">${av(u, 'xs')}<b>@${u}</b></span>` : a; });
 const sysMsg = (c, text) => c.msgs.push({ f: '!', t: Date.now(), r: [], text });
 
 function ginfo() {
@@ -1638,7 +1643,7 @@ function memberSheet(u) {
       if(!await ask('Keluarkan @' + u + ' dari grup?', { ok: 'Keluarkan' })) return;
       load(); const g2 = db.chats[cur]; if(!g2) return;
       g2.members = g2.members.filter(x => x !== u); g2.admins = (g2.admins || []).filter(x => x !== u);
-      sysMsg(g2, '@' + u + ' dikeluarkan oleh @' + me);
+      sysMsg(g2, '@' + me + ' mengeluarkan @' + u + ' dari grup');
       save(); toast('@' + u + ' dikeluarkan'); ginfo(); renderChat(); renderSide();
     }
   };
