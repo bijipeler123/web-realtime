@@ -5,14 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Hitler App</title>
 <meta name="theme-color" content="#4f8f8b">
+
+<!-- Tag Manifest PWA -->
+<link rel="manifest" href="manifest.json">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet">
 <!-- Icon HA Neon SVG -->
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230f0f1b'/%3E%3Crect x='5' y='5' width='90' height='90' rx='18' fill='none' stroke='%2300d2ff' stroke-width='3' filter='drop-shadow(0 0 6px %2300d2ff)'/%3E%3Cpath d='M25 28v44M45 28v44M25 50h20' stroke='%2300d2ff' stroke-width='7' stroke-linecap='round' stroke-linejoin='round' filter='drop-shadow(0 0 5px %2300d2ff)' fill='none'/%3E%3Cpath d='M55 72L67 28l12 44M59 58h16' stroke='%23ff2a8d' stroke-width='7' stroke-linecap='round' stroke-linejoin='round' filter='drop-shadow(0 0 5px %23ff2a8d)' fill='none'/%3E%3C/svg%3E">
-
-<!-- Web App Manifest untuk PWABuilder -->
-<link rel="manifest" href="manifest.json">
 
 <style>
 /* VARIABEL & TEMA */
@@ -505,7 +506,7 @@ try {
   }
 } catch(e) { console.warn('Firebase tidak tersedia, mode lokal:', e); }
 
-/* FUNGSI INISIALISASI PUSH NOTIFICATION (OTOMATIS) */
+/* FUNGSI INISIALISASI PUSH NOTIFICATION */
 async function initPushNotification() {
   if (!messaging) return;
   try {
@@ -527,42 +528,6 @@ async function initPushNotification() {
     }
   } catch (error) {
     console.warn('Gagal mengaktifkan notifikasi:', error);
-  }
-}
-
-/* FUNGSI Pemicu Izin Notifikasi Manual (Tombol) */
-async function mintaIzinNotifManual() {
-  if (!messaging) {
-    toast('Messaging tidak didukung di browser ini');
-    return;
-  }
-  try {
-    toast('Meminta izin notifikasi…');
-    const permission = await Notification.requestPermission();
-    if (permission === 'granted') {
-      const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-      const token = await messaging.getToken({
-        vapidKey: VAPID_KEY,
-        serviceWorkerRegistration: registration
-      });
-      
-      if (token && me) {
-        load();
-        if (db.users[me]) {
-          db.users[me].fcmToken = token;
-          save();
-        }
-        toast('Notifikasi Berhasil Diaktifkan! ✅');
-        console.log('FCM Token:', token);
-      }
-    } else if (permission === 'denied') {
-      toast('Izin ditolak! Harap aktifkan di setelan situs Chrome');
-    } else {
-      toast('Izin notifikasi dibatalkan');
-    }
-  } catch (err) {
-    console.error('Error notif:', err);
-    toast('Gagal: ' + err.message);
   }
 }
 
@@ -942,7 +907,6 @@ function renderSide() {
       </div>
       
       <div style="margin-top:12px">
-        <button class="acct-btn" onclick="mintaIzinNotifManual()" style="background:var(--green);color:#fff">🔔 Aktifkan Notifikasi Web</button>
         ${me === 'riyan' ? '<button class="acct-btn" id="own" style="background:linear-gradient(135deg,#6366f1,#a855f7);color:#fff">🛡️ Panel Owner</button>' : ''}
         <button class="acct-btn" id="prv" style="background:var(--panel);border:1px solid var(--line);color:var(--txt)">🔒 Privasi Akun</button>
         <button class="acct-btn" onclick="logout()" style="background:#e5484d;color:#fff">🚪 Keluar dari Akun</button>
@@ -1228,7 +1192,7 @@ $('#wa').onclick = () => { load(); const u = db.users[me]; u.wp = u.wp || {}; u.
 $('#wx').onclick = () => $('#wm').hidden = true;
 
 const idb = new Promise((ok, no) => { try { const q = indexedDB.open('chatku_media', 1); q.onupgradeneeded = () => q.result.createObjectStore('m'); q.onsuccess = () => ok(q.result); q.onerror = () => no(q.error); } catch(e) { no(e); } });
-const tx = async (mode, fn) => { const d = await idb; return new Promise((ok, no) => { const t = d.transaction('m', mode), q = fn(t.objectStore('m')); t.oncomplete = () => ok(q.result); t.onerror = () => no(q.error); }); };
+const tx = async (mode, fn) => { const d = await idb; return new Promise((ok, no) => { const t = d.transaction('m', mode), q = fn(t.objectStore('m')); t.oncomplete = () => ok(q.result); t.onerror = () => no(t.error); }); };
 const mmem = new Map();
 const mput = async (b, id) => { id = id || ('m' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7)); try { await tx('readwrite', s => s.put({ b, ty: b.type }, id)); } catch(e) { mmem.set(id, b); } return id; };
 const mdelLocal = id => { mmem.delete(id); return tx('readwrite', s => s.delete(id)).catch(() => {}); };
