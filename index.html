@@ -215,6 +215,7 @@ input, textarea, select { font: inherit; color: inherit; }
 /* MEDIA / ONCE / ROLE */
 .once { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 12px; background: rgba(0,0,0,.08); font-size: 14px; }
 .once.go { cursor: pointer; background: linear-gradient(135deg, #6366f122, #ec489922); border: 1px dashed var(--green); }
+.dlm { padding: 12px; border-radius: 12px; background: rgba(0,0,0,.08); border: 1px dashed var(--green); cursor: pointer; font-size: 13px; font-weight: 600; min-width: 190px; }
 .once.done { opacity: .6; font-style: italic; }
 .once .s { display: block; font-size: 11px; opacity: .7; }
 .fw { font-size: 11px; opacity: .7; font-style: italic; margin-bottom: 2px; }
@@ -383,7 +384,8 @@ input, textarea, select { font: inherit; color: inherit; }
   </div>
 </div>
 
-<input type="file" id="sf" accept="image/*,video/*,audio/*" hidden>
+<input type="file" id="sf" accept="image/*,video/*" multiple hidden>
+<input type="file" id="sm" accept="audio/*" multiple hidden>
 <input type="file" id="af" accept="image/*,video/*" hidden>
 <input type="file" id="pf" accept="image/*" hidden>
 <input type="file" id="wf" accept="image/*" hidden>
@@ -813,7 +815,7 @@ function renderSide() {
   } else {
     const ss = db.status.filter(s => canSeeS(s)), by = {};
     ss.forEach(s => (by[s.u] = by[s.u] || []).push(s));
-    h = `<div class="row" id="addst">${by[me] ? av(me, 'ring', ringTh(by[me][by[me].length - 1])) : '<div class="av" style="background:var(--green)">+</div>'}<div class="t"><b>Status saya</b><small>${by[me] ? by[me].length + ' status · lihat' : 'Ketuk untuk tambah status'}</small></div></div><div class="sec">PEMBARUAN TERBARU</div>`;
+    h = `<div class="row" id="addst2"><div class="av" style="background:var(--green)">+</div><div class="t"><b>Tambah status</b><small>Pilih foto/video dari galeri</small></div></div><div class="row" id="addmusic"><div class="av" style="background:linear-gradient(135deg,#a855f7,#ec4899)">🎵</div><div class="t"><b>Status musik</b><small>Pilih file musik</small></div></div>${by[me] ? `<div class="row" id="addst">${av(me, 'ring', ringTh(by[me][by[me].length - 1]))}<div class="t"><b>Status saya</b><small>${by[me].length} status · lihat</small></div></div>` : ''}<div class="sec">PEMBARUAN TERBARU</div>`;
     const o = Object.keys(by).filter(u => u !== me);
     h += o.length ? o.map(u => `<div class="row" data-s="${u}">${av(u, 'ring', ringTh(by[u][by[u].length - 1]))}<div class="t"><b>@${esc(u)}${vb(u)}</b><small>${by[u].length} status · ${hm(by[u][by[u].length - 1].t)}</small></div></div>`).join('') : '<div class="empty">Belum ada status</div>';
   }
@@ -856,8 +858,10 @@ document.addEventListener('click', () => { $('#dd').hidden = true; });
 
 $('#list').onclick = e => {
   if(lpFired) { lpFired = false; return; }
-  const r = e.target.closest('[data-u],[data-c],[data-s],[data-sid],#addst,#newg'); if(!r) return;
+  const r = e.target.closest('[data-u],[data-c],[data-s],[data-sid],#addst,#addst2,#addmusic,#newg'); if(!r) return;
   if(r.id === 'newg') { $('#gm').hidden = false; $('#ge').textContent = ''; }
+  else if(r.id === 'addst2') $('#sf').click();
+  else if(r.id === 'addmusic') $('#sm').click();
   else if(r.dataset.c) openChat(r.dataset.c);
   else if(r.dataset.s) viewS(r.dataset.s);
   else { const mine = db.status.filter(s => s.u === me); mine.length ? viewS(me) : $('#sf').click(); }
@@ -897,6 +901,7 @@ function renderChat(bottom) {
     MS.addEventListener('click', e => {
       const a = e.target.closest('.ul'); if(a) { e.preventDefault(); return a.dataset.g ? joinCode(a.dataset.g) : openUser(a.dataset.un); }
       const o1 = e.target.closest('.once.go'); if(o1) return openOnce(+o1.dataset.i);
+      const dl = e.target.closest('.dlm'); if(dl) return fetchBig(dl.dataset.dl, dl);
       const t = e.target.closest('.vt,.im'); if(t) openMv(+t.dataset.i);
     });
     $('#at').onclick = e => { e.stopPropagation(); $('#ad').hidden = !$('#ad').hidden; };
@@ -923,19 +928,24 @@ function push(m) { if(cur) pushTo(cur, m); }
 function send() { const t = $('#tx').value.trim(); if(!t || !cur || !canSend()) return; $('#tx').value = ''; push({ text: t }); }
 
 /* STATUS SYSTEM */
-$('#sf').onchange = async e => {
-  const f = await takeFile(e.target); if(!f) return;
-  const mt = f.type.startsWith('video/') ? 'v' : f.type.startsWith('image/') ? 'i' : (f.type.startsWith('audio/') || /\.(mp3|m4a|wav|ogg|aac|flac|opus)$/i.test(f.name)) ? 'a' : null;
-  if(!mt) return toast('Pilih foto, video, atau musik');
+async function statusFiles(inp) {
+  const fl = [...(inp.files || [])]; inp.value = ''; if(!fl.length) return;
   if(!canSend()) return;
-  let blob = f; if(mt === 'i') blob = await shrink(f);
-  if(mt === 'a' && !blob.type) blob = new Blob([f], { type: 'audio/mpeg' });
-  if(blob.size > MAXB) return toast('Ukuran maksimal 5 MB (file ini ' + (blob.size / 1048576).toFixed(1) + ' MB)');
-  toast('Memproses status…');
-  const mid = await mput(blob); urls.set(mid, URL.createObjectURL(blob));
-  try { await mup(mid, blob); } catch(err) { toast('Upload ke server gagal, status mungkin tidak terlihat orang lain'); }
-  addStatus({ mt, mid, fn: f.name });
-};
+  let n = 0;
+  for(const f of fl) {
+    const mt = f.type.startsWith('video/') ? 'v' : f.type.startsWith('image/') ? 'i' : (f.type.startsWith('audio/') || /\.(mp3|m4a|wav|ogg|aac|flac|opus)$/i.test(f.name)) ? 'a' : null;
+    if(!mt) { toast('Format tidak didukung: ' + f.name); continue; }
+    let blob = f; if(mt === 'i') blob = await shrink(f);
+    if(mt === 'a' && !blob.type) blob = new Blob([f], { type: 'audio/mpeg' });
+    if(blob.size > MAXB) { toast('Ukuran maksimal 100 MB (file ini ' + (blob.size / 1048576).toFixed(1) + ' MB)'); continue; }
+    toast('Mengunggah status ' + (n + 1) + '/' + fl.length + '…');
+    const mid = await mput(blob); urls.set(mid, URL.createObjectURL(blob));
+    try { await mup(mid, blob, p => toast('Mengunggah status ' + p + '%')); } catch(err) { toast('Upload ke server gagal, status mungkin tidak terlihat orang lain'); }
+    addStatus({ mt, mid, fn: f.name, sz: blob.size }); n++;
+  }
+}
+$('#sf').onchange = e => statusFiles(e.target);
+$('#sm').onchange = e => statusFiles(e.target);
 function addStatus(o) {
   load(); db.status.push({ id: 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), u: me, t: Date.now(), cap: '', views: [], ...o });
   if(save()) { tab = 'status'; renderSide(); toast('Status diposting'); }
@@ -959,7 +969,7 @@ function showS() {
   let body;
   if(s.mid && !src) {
     if(stFail.has(s.mid)) body = '<div class="empty" style="color:#fff">Media tidak ditemukan</div>';
-    else { body = '<div class="empty" style="color:#fff">⏳ Memuat…</div>'; murl(s.mid).then(u => { if(!u) stFail.add(s.mid); if(vs[vi] === s && !$('#vw').hidden) showS(); }); }
+    else { body = '<div class="empty" style="color:#fff" id="stp">⏳ Memuat…</div>'; murl(s.mid, p => { const e = $('#stp'); if(e && vs[vi] === s) e.textContent = '⏳ Memuat ' + p + '%'; }).then(u => { if(!u) stFail.add(s.mid); if(vs[vi] === s && !$('#vw').hidden) showS(); }); }
   } else if(s.mt === 'v') body = `<video src="${src}" autoplay controls playsinline></video>`;
   else if(s.mt === 'a') body = `<div class="st-au">🎵<b>${esc(s.fn || 'Musik')}</b><audio src="${src}" autoplay controls></audio></div>`;
   else body = `<img src="${src}">`;
@@ -1041,7 +1051,7 @@ const mdelLocal = id => { mmem.delete(id); return tx('readwrite', s => s.delete(
 const mdel = id => { try { if(firebaseDb) firebaseDb.ref('hitler_media/' + id).remove(); } catch(e) {} return mdelLocal(id); };
 const urls = new Map();
 const inflight = new Map();
-function murl(id) {
+function murl(id, onp) {
   if(urls.get(id)) return Promise.resolve(urls.get(id));
   if(inflight.has(id)) return inflight.get(id);
   const pr = (async () => {
@@ -1049,8 +1059,22 @@ function murl(id) {
       let b = mmem.get(id);
       if(!b) { try { const r = await tx('readonly', s => s.get(id)); b = r && (r.b ? new Blob([r.b], { type: r.ty || r.b.type }) : r); } catch(e) {} }
       if(!b && firebaseDb) {
-        const sn = await firebaseDb.ref('hitler_media/' + id).once('value'), v = sn.val();
-        if(v) { b = dataUrlToBlob(v); try { await tx('readwrite', st => st.put({ b, ty: b.type }, id)); } catch(e) { mmem.set(id, b); } }
+        const ref = firebaseDb.ref('hitler_media/' + id), meta = (await ref.child('m').once('value')).val();
+        if(meta && meta.n) {
+          const parts = new Array(meta.n), q = [...Array(meta.n).keys()]; let done = 0;
+          const worker = async () => {
+            while(q.length) {
+              const k = q.shift(), v = (await ref.child('c/' + k).once('value')).val(); if(v == null) throw new Error('chunk');
+              const bin = atob(v), a = new Uint8Array(bin.length); for(let i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i);
+              parts[k] = a; done++; if(onp) onp(Math.round(done / meta.n * 100));
+            }
+          };
+          await Promise.all([worker(), worker(), worker()]);
+          b = new Blob(parts, { type: meta.ty || 'application/octet-stream' });
+        } else {
+          const v = (await ref.once('value')).val(); if(typeof v === 'string') b = dataUrlToBlob(v);
+        }
+        if(b) { try { await tx('readwrite', st => st.put({ b, ty: b.type }, id)); } catch(e) { mmem.set(id, b); } }
       }
       const u = b ? URL.createObjectURL(b) : ''; if(u) urls.set(id, u); return u;
     } catch(e) { return ''; } finally { inflight.delete(id); }
@@ -1073,6 +1097,7 @@ function mhtml(m, i) {
     return `<div class="once go" data-i="${i}">👁 <span><b>Foto 1x lihat</b><span class="s">Ketuk untuk membuka (hanya sekali)</span></span></div>`;
   }
   const id = m.mid, u = m.src || (id && urls.get(id)) || '', d = id ? ` data-mid="${id}"` : '', sa = u ? ` src="${u}"` : '';
+  if(id && !u && (m.sz || 0) > 10 * 1024 * 1024 && ['v', 'a', 'f'].includes(m.mt)) return fw + `<div class="dlm" data-dl="${id}">⬇ Unduh ${({ v: 'video', a: 'musik', f: 'file' })[m.mt]} · ${(m.sz / 1048576).toFixed(1)} MB<small style="float:none;display:block;margin:0">${esc(m.fn || '')}</small></div>`;
   if(m.mt === 'v') return fw + `<div class="vt" data-i="${i}"><video${d}${u ? ` src="${u}#t=0.1"` : ''} preload="metadata" muted playsinline></video><span>▶</span></div>`;
   if(m.mt === 'a') return fw + `<div class="au">🎵 <b>${esc(m.fn || 'Musik')}</b></div><audio controls preload="metadata" data-i="${i}"${d}${sa}></audio>`;
   if(m.mt === 'f') return fw + `<a class="fl"${d} href="${u || '#'}" download="${esc(m.fn || 'file')}">📄 <b>${esc(m.fn || 'File')}</b></a>`;
@@ -1416,7 +1441,7 @@ $('#ga').onclick = async () => {
 
 
 /* ============ MEDIA: kirim foto / 1x lihat / video / musik / file ============ */
-const MAXB = 5 * 1024 * 1024;
+const MAXB = 100 * 1024 * 1024;
 let PRES = {}, onceOpen = null, umUser = null, gpic = null, fwdMsg = null;
 try { PRES = JSON.parse(localStorage.getItem('chatku_pres') || '{}'); } catch(e) {}
 const typing = {};
@@ -1427,10 +1452,18 @@ function dataUrlToBlob(du) {
   for(let i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i);
   return new Blob([a], { type: mime });
 }
-async function mup(id, blob) {
+const CH = 3 * 1024 * 1024;
+function b64Slice(blob) { return new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(r.result.slice(r.result.indexOf(',') + 1)); r.onerror = () => no(r.error); r.readAsDataURL(blob); }); }
+async function mup(id, blob, onp) {
   if(!firebaseDb) return true;
-  const du = await b2d(blob);
-  await firebaseDb.ref('hitler_media/' + id).set(du);
+  const n = Math.max(1, Math.ceil(blob.size / CH)), ref = firebaseDb.ref('hitler_media/' + id);
+  try {
+    await ref.child('m').set({ n, ty: blob.type || '', sz: blob.size });
+    for(let i = 0; i < n; i += 2) {
+      await Promise.all([i, i + 1].filter(k => k < n).map(async k => { await ref.child('c/' + k).set(await b64Slice(blob.slice(k * CH, (k + 1) * CH))); }));
+      if(onp) onp(Math.min(100, Math.round(Math.min(n, i + 2) / n * 100)));
+    }
+  } catch(e) { try { ref.remove(); } catch(x) {} throw e; }
   return true;
 }
 function loadImg(f) { return new Promise((ok, no) => { const u = URL.createObjectURL(f), i = new Image(); i.onload = () => { URL.revokeObjectURL(u); ok(i); }; i.onerror = () => { URL.revokeObjectURL(u); no(new Error('img')); }; i.src = u; }); }
@@ -1460,10 +1493,10 @@ $('#af').onchange = async e => {
   let blob = f;
   if(k === 'i' || k === 'o') blob = await shrink(f);
   else if(!f.type) blob = new Blob([f], { type: k === 'a' ? 'audio/mpeg' : 'application/octet-stream' });
-  if(blob.size > MAXB) return toast('Ukuran maksimal 5 MB (file ini ' + (blob.size / 1048576).toFixed(1) + ' MB)');
+  if(blob.size > MAXB) return toast('Ukuran maksimal 100 MB (file ini ' + (blob.size / 1048576).toFixed(1) + ' MB)');
   toast('Mengirim…');
   const mid = await mput(blob); urls.set(mid, URL.createObjectURL(blob));
-  try { await mup(mid, blob); } catch(err) { toast('Upload ke server gagal, penerima mungkin tidak bisa membuka file'); }
+  try { await mup(mid, blob, p => toast('Mengirim ' + p + '%')); } catch(err) { toast('Upload ke server gagal, penerima mungkin tidak bisa membuka file'); }
   pushTo(id0, { mt: k, mid, fn: f.name, sz: f.size, ...(k === 'o' ? { once: 1 } : {}) });
   if(k === 'o') { urls.delete(mid); mdelLocal(mid); }
 };
@@ -1508,6 +1541,12 @@ document.addEventListener('visibilitychange', () => { if(me) presSet(document.hi
 window.addEventListener('pagehide', () => { if(me) presSet(0); });
 window.addEventListener('beforeunload', () => { if(me) presSet(0); });
 
+async function fetchBig(id, el) {
+  if(el.dataset.busy) return; el.dataset.busy = 1; el.textContent = '⏳ Mengunduh 0%';
+  const u = await murl(id, p => { el.textContent = '⏳ Mengunduh ' + p + '%'; });
+  if(!u) { el.dataset.busy = ''; el.textContent = '⚠️ Gagal mengunduh, ketuk untuk coba lagi'; return; }
+  if(cur) renderChat();
+}
 function closeChatUI() {
   stopMedia(); cur = null; $('#app').classList.remove('open'); $('#gi').hidden = true;
   $('#main').innerHTML = '<div class="ph">Pilih chat atau cari username<br>untuk mulai mengobrol 💬</div>';
@@ -1734,7 +1773,7 @@ function csReply(t) {
   if(/^(3|banned|ban|beku|bekukan|blokir)\b/.test(s)) return '🚫 Akun dibanned/dibekukan oleh owner. Beku akan otomatis berakhir sesuai waktu yang ditentukan. Untuk banding ketik: lapor <alasanmu>.';
   if(/^(4|privasi|centang|biru|online|foto profil)\b/.test(s)) return '🔒 Buka tab Akun → Privasi Akun. Kamu bisa atur Foto Profil, Online, Bio, dan Centang Biru: untuk semua, semua kecuali, hanya orang tertentu, atau tidak ada.';
   if(/^(5|grup|group|admin|kick)\b/.test(s)) return '👥 Tab Grup → Grup baru. Admin bisa mengubah nama/bio/foto, menambah anggota, menjadikan atau menghapus admin, dan mengeluarkan anggota (ketuk nama anggota di Info grup).';
-  if(/^(6|status|media|foto|video|musik|file)\b/.test(s)) return '📎 Tombol 📎 di chat untuk kirim foto, foto 1x lihat, video, musik, file (maks 5 MB). Status: tab Status → Status saya, bisa foto/video/musik dan tidak hilang kecuali kamu hapus.';
+  if(/^(6|status|media|foto|video|musik|file)\b/.test(s)) return '📎 Tombol 📎 di chat untuk kirim foto, foto 1x lihat, video, musik, file (maks 100 MB). Status: tab Status → Status saya, bisa foto/video/musik dan tidak hilang kecuali kamu hapus.';
   if(/^(menu|help|bantuan|halo|hai|hi|start|\/start)\b/.test(s)) return CS_MENU;
   return 'Maaf, aku belum paham 🙏\n\n' + CS_MENU;
 }
